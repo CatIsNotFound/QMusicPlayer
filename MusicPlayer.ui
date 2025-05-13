@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MusicPlayer</class>
+ <widget class="QMainWindow" name="MusicPlayer">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>534</width>
+    <height>644</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MusicPlayer</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QSplitter" name="splitter">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>511</width>
+      <height>561</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Orientation::Vertical</enum>
+    </property>
+    <widget class="Player" name="playerWidget" native="true">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>150</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>150</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>试听列表</string>
+      </attribute>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>534</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_F">
+    <property name="title">
+     <string>文件(&amp;F)</string>
+    </property>
+    <addaction name="action_Open"/>
+    <addaction name="separator"/>
+    <addaction name="action_Exit"/>
+   </widget>
+   <widget class="QMenu" name="menu_C">
+    <property name="title">
+     <string>控制(&amp;C)</string>
+    </property>
+    <addaction name="action_Play_Pause"/>
+    <addaction name="action_StopSong"/>
+    <addaction name="separator"/>
+    <addaction name="action_Backward"/>
+    <addaction name="action_Forward"/>
+    <addaction name="separator"/>
+    <addaction name="action_LastSong"/>
+    <addaction name="action_NextSong"/>
+   </widget>
+   <widget class="QMenu" name="menu_H">
+    <property name="title">
+     <string>帮助(&amp;H)</string>
+    </property>
+    <addaction name="action_Github"/>
+    <addaction name="action_Readme"/>
+    <addaction name="action_About"/>
+    <addaction name="action_AboutQt"/>
+   </widget>
+   <widget class="QMenu" name="menu_P">
+    <property name="title">
+     <string>播放列表(&amp;P)</string>
+    </property>
+    <addaction name="action_OpenPlaylist"/>
+    <addaction name="action_SavePlaylist"/>
+    <addaction name="action_SaveAsPlaylist"/>
+    <addaction name="action_C"/>
+   </widget>
+   <addaction name="menu_F"/>
+   <addaction name="menu_P"/>
+   <addaction name="menu_C"/>
+   <addaction name="menu_H"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_Open">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/音乐文件1_file-music-one.svg</normaloff>:/assets/音乐文件1_file-music-one.svg</iconset>
+   </property>
+   <property name="text">
+    <string>打开(&amp;O)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="action_OpenPlaylist">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/assets/music-list.svg</normaloff>:/assets/music-list.svg</iconset>
+   </property>
+   <property name="text">
+    <string>打开播放列表(&amp;I)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
+   </property>
+  </action>
+  <action name="action_SavePlaylist">
+   <property name="text">
+    <string>自动保存播放列表(&amp;S)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="action_SaveAsPlaylist">
+   <property name="text">
+    <string>另存为新的播放列表</string>
+   </property>
+  </action>
+  <action name="action_Exit">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/关闭_close-one.svg</normaloff>:/assets/关闭_close-one.svg</iconset>
+   </property>
+   <property name="text">
+    <string>退出(&amp;X)</string>
+   </property>
+  </action>
+  <action name="action_Play_Pause">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/playSong.svg</normaloff>:/assets/playSong.svg</iconset>
+   </property>
+   <property name="text">
+    <string>播放/暂停(&amp;P)</string>
+   </property>
+   <property name="shortcut">
+    <string>Space</string>
+   </property>
+  </action>
+  <action name="action_Github">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/github _github.svg</normaloff>:/assets/github _github.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Github 仓库</string>
+   </property>
+  </action>
+  <action name="action_Readme">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/24gf-fileText.svg</normaloff>:/assets/24gf-fileText.svg</iconset>
+   </property>
+   <property name="text">
+    <string>显示自述文件(&amp;R)</string>
+   </property>
+  </action>
+  <action name="action_About">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/版本信息提示.svg</normaloff>:/assets/版本信息提示.svg</iconset>
+   </property>
+   <property name="text">
+    <string>关于(&amp;A)</string>
+   </property>
+  </action>
+  <action name="action_AboutQt">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/版本信息提示.svg</normaloff>:/assets/版本信息提示.svg</iconset>
+   </property>
+   <property name="text">
+    <string>关于 &amp;Qt</string>
+   </property>
+  </action>
+  <action name="action_LastSong">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/lastSong.svg</normaloff>:/assets/lastSong.svg</iconset>
+   </property>
+   <property name="text">
+    <string>上一首(&amp;L)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Up</string>
+   </property>
+  </action>
+  <action name="action_NextSong">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/nextSong.svg</normaloff>:/assets/nextSong.svg</iconset>
+   </property>
+   <property name="text">
+    <string>下一首(&amp;N)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Down</string>
+   </property>
+  </action>
+  <action name="action_NewPlaylistt">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/assets/add-four.svg</normaloff>:/assets/add-four.svg</iconset>
+   </property>
+   <property name="text">
+    <string>新建播放列表(&amp;N)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+N</string>
+   </property>
+  </action>
+  <action name="action_StopSong">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/stopSong.svg</normaloff>:/assets/stopSong.svg</iconset>
+   </property>
+   <property name="text">
+    <string>停止(&amp;S)</string>
+   </property>
+  </action>
+  <action name="action_C">
+   <property name="text">
+    <string>关闭播放列表(&amp;C)</string>
+   </property>
+  </action>
+  <action name="action_Backward">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/backward.svg</normaloff>:/assets/backward.svg</iconset>
+   </property>
+   <property name="text">
+    <string>快退 3 秒</string>
+   </property>
+   <property name="shortcut">
+    <string>Left</string>
+   </property>
+  </action>
+  <action name="action_Forward">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/forward.svg</normaloff>:/assets/forward.svg</iconset>
+   </property>
+   <property name="text">
+    <string>快进 3 秒</string>
+   </property>
+   <property name="shortcut">
+    <string>Right</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Player</class>
+   <extends>QWidget</extends>
+   <header>Player.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

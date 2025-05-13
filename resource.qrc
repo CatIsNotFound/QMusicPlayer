@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="/">
+    <file>assets/24gf-fileText.svg</file>
+    <file>assets/版本信息提示.svg</file>
+    <file>assets/音乐文件1_file-music-one.svg</file>
+    <file>assets/app.svg</file>
+    <file>assets/appicon.ico</file>
+    <file>assets/backward.svg</file>
+    <file>assets/Default.jpg</file>
+    <file>assets/forward.svg</file>
+    <file>assets/github _github.svg</file>
+    <file>assets/lastSong.svg</file>
+    <file>assets/nextSong.svg</file>
+    <file>assets/pauseSong.svg</file>
+    <file>assets/playSong.svg</file>
+    <file>assets/stopSong.svg</file>
+    <file>assets/播放一次_play-once.svg</file>
+    <file>assets/传入_afferent.svg</file>
+    <file>assets/关闭_close-one.svg</file>
+    <file>assets/静音_volume-mute.svg</file>
+    <file>assets/清除_clear.svg</file>
+    <file>assets/删除_delete.svg</file>
+    <file>assets/声音-大_volume-notice.svg</file>
+    <file>assets/添加_add-four.svg</file>
+    <file>assets/循环播放_play-cycle.svg</file>
+    <file>assets/循环一次_loop-once.svg</file>
+    <file>assets/音乐菜单_music-list.svg</file>
+    <file>assets/重新播放_replay-music.svg</file>
+  </qresource>
+</RCC>
