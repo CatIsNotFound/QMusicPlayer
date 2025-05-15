@@ -15,6 +15,13 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class Player; }
 QT_END_NAMESPACE
 
+// 播放循环模式
+enum class PlayLoopMode {
+    NoLoop,             // 无循环
+    ListLoop,           // 列表循环
+    SingleSongLoop      // 单曲循环
+};
+
 class Player : public QWidget {
 Q_OBJECT
 
@@ -24,16 +31,25 @@ public:
     ~Player() override;
 
     void setEnabledControls(const bool enabled);
+    void setPlayerControls(const bool enabled);
+    const bool isEnabledControl() const;
     const bool isPlayingSong() const;
+    const int volume() const;
+    const bool isMuted() const;
+    void dropOutSong();
+    void setPlayLoopMode(const PlayLoopMode& loopMode);
+    const PlayLoopMode& getPlayLoopMode() const;
 
 signals:
     void songsChanged(const QString& url);
-    void playPositionChanged(const quint64 position);
+    void playControlChanged(const bool& enabled);
+    void playPositionChanged(const qint64 position);
     void volumeChanged(const quint8 volume);
     void deviceChanged();
     void invalidMedia(const QString& url);
     void nextSongRequest();
     void lastSongRequest();
+    void resetPlayer();
 
 public slots:
     void playAndPause();
@@ -41,7 +57,8 @@ public slots:
     void pause();
     void stop();
     void playSongImmediately(const QString& url);
-    void changeVolume(const quint8 volume);
+    void changeVolume(const int volume);
+    void muteVolume();
     void changeAudioDevice(const QAudioDevice& audioDevice);
     void metaDataChanged();
     void changePlayPosition();
@@ -59,6 +76,8 @@ private:
     QPointer<QMediaPlayer> mediaPlayer;
     QPointer<QAudioOutput> audioOutput;
     bool isSliderMoved{false};
+    PlayLoopMode playLoopMode{PlayLoopMode::NoLoop};
+    bool playing{false};
 };
 
 

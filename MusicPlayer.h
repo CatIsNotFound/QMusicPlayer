@@ -7,20 +7,40 @@
 #include <QAction>
 #include <QCloseEvent>
 #include <QPointer>
+#include <QLabel>
 #include <QTableView>
 #include <QStandardItemModel>
 #include <QDir>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSystemTrayIcon>
+#include <QDesktopServices>
+#include <QThread>
 #include <taglib/fileref.h>
 #include <taglib/tag.h>
+#include <taglib/flacfile.h>
 
 #include "Player.h"
+#include "AboutApp.h"
+#include "playlist.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MusicPlayer; }
 QT_END_NAMESPACE
+
+class ImportSongsTask : public QThread {
+public:
+    ImportSongsTask() : directory_name(QDir::homePath()) {}
+    ImportSongsTask(const QString& dir) : directory_name(dir) {}
+
+    void setDirectory(const QString& dir) { directory_name = dir; }
+
+    void run() override;
+
+private:
+    QString directory_name;
+    Playlist imported_play_list;
+};
 
 class MusicPlayer : public QMainWindow {
 Q_OBJECT
@@ -32,26 +52,41 @@ public:
 
     void setupConnection();
     void setupList();
+    void setupOthers();
+    void updateSelectionCount();
+    void nextSong();
+    void lastSong();
 
 protected:
+    void firstSong();
+    void replayCurrentSong();
     void resizeEvent(QResizeEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
 
 protected slots:
     void openFileAndPlayFile();
     void playPause();
+    void getSongInfo(const QString& url);
+    void playSongFromList();
+    void importSongToList();
+    void importSongDirectoryToList();
+    void removeSongFromList();
+    void clearPlayList();
+    void openGithub();
+    void showReadMe();
+    void showVersion();
 
 private:
     Ui::MusicPlayer *ui;
     QPointer<QSystemTrayIcon> trayIcon;
-    QPointer<QMenu> trayMenu;
+    QPointer<QMenu> trayMenu, listMenu;
     QPointer<QAction> action_ShowUI, action_Quit;
     QPointer<QStandardItemModel> model;
     QPointer<QTableView> table;
-    QStandardItem* col_path;
-    QStandardItem* col_songName;
-    QStandardItem* col_artist;
+    QPointer<QLabel> status_list, status_playing;
+    Playlist playlist;
+    qint64 current_playing{-1};
+    QPointer<ImportSongsTask> import_task;
 };
-
 
 #endif //MUSICPLAYER_MUSICPLAYER_H

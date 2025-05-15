@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/">
+    <file>assets/音量减小_volume-down.svg</file>
+    <file>assets/音量增大_volume-up.svg</file>
     <file>assets/24gf-fileText.svg</file>
     <file>assets/版本信息提示.svg</file>
     <file>assets/音乐文件1_file-music-one.svg</file>

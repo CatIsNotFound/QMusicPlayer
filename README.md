@@ -8,12 +8,21 @@
 
 A Simple Local Music Player Based on Qt6 Development
 
+![Screenshot.jpg](assets/screenshot.jpg)
+
 
 ## 项目说明
 
 本项目基于 GNU General Public License v3.0，仅供学习参考，**请勿用于商业途径！**
 
+
+
 具体相关内容，请见 [LICENSE](./LICENSE.txt) 文件。
+
+## 下载安装
+
+1. 前往 [Github Release](https://github.com/CatIsNotFound/QMusicPlayer/releases/latest) 查看最新版本即可。
+2. 或者直接克隆项目并编译，具体如何编译请看下文。
 
 ## 编译文件说明
 
@@ -21,14 +30,16 @@ A Simple Local Music Player Based on Qt6 Development
 
 ```
 # Attention: Dont forget to modify the CMAKE_PREFIX_PATH variable!
-# 请注意修改这里的两个路径！！
-set(CMAKE_PREFIX_PATH "/path/to/msvc2022_64")  # Qt Creator 下请注释此行
-list(APPEND CMAKE_PREFIX_PATH "./3rdParty/taglib-2.0.2")  # 非 Windows 环境请注释此行
+# 请注意修改这里的路径！！
+# set(CMAKE_PREFIX_PATH "/path/to/Qt") 
+# list(APPEND CMAKE_PREFIX_PATH "./3rdParty/taglib-2.0.2-MSVC")  # 若为 MSVC 微软编译器，取消注释
+# list(APPEND CMAKE_PREFIX_PATH "./3rdParty/taglib-2.0.2-MinGW")  # 若为 MinGW 编译器，取消注释
+...
 ```
 
 > NOTES: 
 > 
-> 1. 关于 `Taglib` 项目，这里使用的是 MSVC 编译器进行编译，若你使用的并非 Windows 系统，请手动将上文代码的最后一行注释即可！
+> 1. 关于 `Taglib` 项目，这里使用的是 MSVC 或 MinGW 环境进行编译，若你使用的并非 Windows 系统，请使用自带包管理器或自行编译安装！
 > 
 > 2. 如果你是使用 Qt Creator， 记得不要忘记注释掉倒数第二行，因为安装的 Qt 目录有所不同，容易出现找不到包的情况！
 >
