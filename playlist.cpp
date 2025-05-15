@@ -64,3 +64,41 @@ const Playlist::Song Playlist::getSongByPath(const QString &path) {
     }
     return Song();
 }
+
+bool Playlist::parseSongFromFileName(const QString &path, Song &song) {
+    QFileInfo file(path);
+    // 判断是否是文件
+    if (!file.isFile()) return false;
+    QByteArray codec = file.absoluteFilePath().toLocal8Bit();
+    // 解析音乐文件
+    qDebug() << "[Debug] Parsed" << codec.toStdString().c_str();
+    TagLib::FileRef fileRef(codec.toStdString().c_str());
+    // 文件无法解析！
+    if (!fileRef.file()) return false;
+    TagLib::Tag *music_tag = fileRef.tag();     // 获取音乐文件下的标签
+    Song temp_song;                             // 用于将解析结果存入此结构体中
+    temp_song.path = path;
+    temp_song.title = file.fileName();          // 暂时以文件名命名标题
+    // 若无法解析标签
+    if (!music_tag) {
+        qInfo() << "[Error] Can not parse the file" << path << "!";
+        temp_song.album = "未知专辑";
+        temp_song.artist = "未知歌手";
+        play_list.emplace_back(temp_song);
+        song = temp_song;
+        return true;
+    }
+    QString m_title = music_tag->title().toCString(true);
+    // 若此音乐文件有标题
+    if (!m_title.isEmpty()) {
+        temp_song.title = m_title;
+        QString artist = music_tag->artist().toCString(true);
+        QString album = music_tag->album().toCString(true);
+        temp_song.artist = (artist.isEmpty() ? "未知歌手" : artist);
+        temp_song.album = (album.isEmpty() ? "未知专辑" : album);
+    }
+    // 已成功解析
+    play_list.emplace_back(temp_song);
+    song = temp_song;
+    return true;
+}

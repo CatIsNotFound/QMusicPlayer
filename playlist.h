@@ -3,6 +3,12 @@
 #define QMUSICPLAYER_PLAYLIST_H
 #include <QString>
 #include <QList>
+#include <QFileInfo>
+
+#include <taglib/fileref.h>
+#include <taglib/tag.h>
+#include <taglib/flacfile.h>
+
 class Playlist {
 
 public:
@@ -26,6 +32,7 @@ public:
     const Song getSongByPath(const QString& path);
     const uint findSongByPath(const QString& path);
     const uint getSongCount() const;
+    bool parseSongFromFileName(const QString& path, Song &song);
 
 private:
     QList<Song> play_list;

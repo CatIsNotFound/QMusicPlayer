@@ -29,6 +29,7 @@ namespace Ui { class MusicPlayer; }
 QT_END_NAMESPACE
 
 class ImportSongsTask : public QThread {
+    Q_OBJECT
 public:
     ImportSongsTask() : directory_name(QDir::homePath()) {}
     ImportSongsTask(const QString& dir) : directory_name(dir) {}
@@ -36,6 +37,12 @@ public:
     void setDirectory(const QString& dir) { directory_name = dir; }
 
     void run() override;
+    const Playlist& getImportedPlaylist();
+    void clearImportedPlaylist();
+
+signals:
+    void finishedWork(int success_count);
+    void addSong(const Playlist::Song& song);
 
 private:
     QString directory_name;
@@ -54,6 +61,8 @@ public:
     void setupList();
     void setupOthers();
     void updateSelectionCount();
+
+public slots:
     void nextSong();
     void lastSong();
 
@@ -62,6 +71,7 @@ protected:
     void replayCurrentSong();
     void resizeEvent(QResizeEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 
 protected slots:
     void openFileAndPlayFile();
@@ -87,6 +97,7 @@ private:
     Playlist playlist;
     qint64 current_playing{-1};
     QPointer<ImportSongsTask> import_task;
+    bool is_not_closed{true};
 };
 
 #endif //MUSICPLAYER_MUSICPLAYER_H

@@ -41,24 +41,25 @@ void MusicPlayer::setupConnection() {
         setWindowState(Qt::WindowActive);
         show();
     });
-    connect(action_Quit, &QAction::triggered, this, &QApplication::quit);
+    connect(action_Quit, &QAction::triggered, [this] { is_not_closed = false; QApplication::quit(); });
     connect(trayIcon, &QSystemTrayIcon::activated, this, [&] (QSystemTrayIcon::ActivationReason reason) {
         if (reason == QSystemTrayIcon::Trigger) {
             this->show();
             this->setWindowState(Qt::WindowActive);
         }
     });
+
     // 文件
     connect(ui->action_Open, &QAction::triggered, this, &MusicPlayer::openFileAndPlayFile);
-    connect(ui->action_Exit, &QAction::triggered, this, &QApplication::quit);
+    connect(ui->action_Exit, &QAction::triggered, [this] { is_not_closed = false; QApplication::quit(); });
 
     // 控制播放
     connect(ui->action_Play_Pause, &QAction::triggered, this, &MusicPlayer::playPause);
     connect(ui->action_StopSong, &QAction::triggered, ui->playerWidget, &Player::stop);
     connect(ui->action_Backward, &QAction::triggered, ui->playerWidget, &Player::backward3Sec);
     connect(ui->action_Forward, &QAction::triggered, ui->playerWidget, &Player::forward3Sec);
-    connect(ui->action_NextSong, &QAction::triggered, this, []{});
-    connect(ui->action_LastSong, &QAction::triggered, this, []{});
+    connect(ui->action_NextSong, &QAction::triggered, this, &MusicPlayer::nextSong);
+    connect(ui->action_LastSong, &QAction::triggered, this, &MusicPlayer::lastSong);
     connect(ui->action_VolumeUp, &QAction::triggered, [this]{
         ui->action_VolumeMute->setCheckable(false);
         ui->playerWidget->changeVolume(ui->playerWidget->volume() + 5);
@@ -199,8 +200,11 @@ void MusicPlayer::resizeEvent(QResizeEvent *event) {
 
 void MusicPlayer::closeEvent(QCloseEvent *event) {
     event->ignore();
-    // trayIcon->showMessage(QApplication::applicationName(), "请注意：程序仍在运行，不要忘记从托盘图标中打开！");
     hide();
+}
+
+void MusicPlayer::hideEvent(QHideEvent *event) {
+    if (is_not_closed) trayIcon->showMessage(QApplication::applicationName(), "请注意：程序仍在运行，不要忘记从托盘图标中打开！");
 }
 
 void MusicPlayer::openFileAndPlayFile() {
@@ -248,34 +252,19 @@ void MusicPlayer::playSongFromList() {
 void MusicPlayer::importSongToList() {
     auto file_name = QFileDialog::getOpenFileName(this, "导入歌曲到播放列表", QDir::homePath(), "MP3文件(*.mp3);;FLAC文件(*.flac);;音频文件(*.wav);;所有文件(*.*)");
     if (file_name.isEmpty()) return;
-    qInfo() << "Import to list: " << file_name;
-    TagLib::FileRef f(file_name.toStdString().data());
     Playlist::Song temp_song;
-    if (!f.isNull()) {
-        if (f.tag()) {
-            temp_song.title = QString::fromStdString(f.tag()->title().toCString(true));
-            temp_song.artist = QString::fromStdString(f.tag()->artist().toCString(true));
-            temp_song.album = QString::fromStdString(f.tag()->album().toCString(true));
-            temp_song.path = file_name;
-        } else {
-            temp_song.title = file_name.right(file_name.lastIndexOf('/'));
-            temp_song.artist = "";
-            temp_song.album = "";
-            temp_song.path = file_name;
-        }
-    }
-    if (temp_song.title.isEmpty()) {
-        temp_song.title = file_name.right(file_name.size()- file_name.lastIndexOf('/') - 1);
-        temp_song.path = file_name;
-    }
-    uint idx = playlist.addSongToList(temp_song);
-    if (idx != UINT16_MAX) {
+    uint idx = playlist.findSongByPath(file_name);
+    if (idx != UINT16_MAX) return;
+    if (playlist.parseSongFromFileName(file_name, temp_song)) {
         QList<QStandardItem*> item_list;
         item_list.emplace_back(new QStandardItem(temp_song.title));
         item_list.emplace_back(new QStandardItem(temp_song.artist));
         item_list.emplace_back(new QStandardItem(temp_song.album));
         item_list.emplace_back(new QStandardItem(temp_song.path));
         model->appendRow(item_list);
+    } else {
+        qCritical().noquote() << "[Error] File" << file_name << "can not parse!";
+        QMessageBox::critical(this, "无法导入", QString("文件 %1 不是有效或可解析的音乐文件！").arg(file_name));
     }
     status_list->setText(QString("当前播放列表共 %1 项").arg(model->rowCount()));
 }
@@ -284,9 +273,25 @@ void MusicPlayer::importSongDirectoryToList() {
     auto dir_name = QFileDialog::getExistingDirectory(this, "导入歌曲目录到列表", QDir::homePath());
     if (dir_name.isEmpty()) return;
     qInfo() << "Import Directory: " << dir_name;
-    if (!import_task) import_task = new ImportSongsTask();
+    if (!import_task) {
+        import_task = new ImportSongsTask();
+        qInfo() << "Create Import task!";
+        connect(import_task, &ImportSongsTask::finishedWork, [this] (int count) {
+            import_task->clearImportedPlaylist();
+            status_list->setText(QString("此次共导入了 %1 首歌曲！").arg(count));
+        });
+        connect(import_task, &ImportSongsTask::addSong, [this] (const Playlist::Song& song) {
+            QList<QStandardItem *> item_list;
+            playlist.addSongToList(song);
+            item_list.emplace_back(new QStandardItem(song.title));
+            item_list.emplace_back(new QStandardItem(song.artist));
+            item_list.emplace_back(new QStandardItem(song.album));
+            item_list.emplace_back(new QStandardItem(song.path));
+            model->appendRow(item_list);
+        });
+    }
     import_task->setDirectory(dir_name);
-    import_task->run();
+    import_task->start();
 }
 
 void MusicPlayer::removeSongFromList() {
@@ -366,30 +371,27 @@ void MusicPlayer::showVersion() {
 }
 
 void ImportSongsTask::run() {
-    QThread::run();
+    qInfo() << "Import Task is started!";
     QDir dir(directory_name);
+    int success_count = 0;
     auto songs_list = dir.entryList(QDir::Files);
     for (auto& song : songs_list) {
+        QString path = directory_name + "/" + song;
+        qInfo() << "Import:" << song;
         Playlist::Song temp_song;
-        // 筛选
-        if (song.endsWith("mp3") || song.endsWith("flac") || song.endsWith("wav")) {
-            qInfo().noquote() << song << ": ";
-            TagLib::FileRef mp3File(song.toStdString().data());
-            if (!mp3File.isNull() && mp3File.tag()) {
-                TagLib::Tag *tag = mp3File.tag();
-                qInfo() << "MP3 元数据:" ;
-                qInfo() << "标题: " << tag->title().toCString();
-                qInfo() << "艺术家: " << tag->artist().toCString();
-                qInfo() << "专辑: " << tag->album().toCString();
-            }
-            TagLib::FLAC::File flacFile(song.toStdString().data());
-            if (flacFile.isValid()) {
-                qInfo() << "\nFLAC 元数据:";
-                TagLib::Tag *tag = flacFile.tag();
-                qInfo() << "标题: " << tag->title().toCString();
-                qInfo() << "艺术家: " << tag->artist().toCString();
-                qInfo() << "专辑: " << tag->album().toCString();
-            }
+        if (imported_play_list.parseSongFromFileName(path, temp_song)) {
+            success_count++;
+            emit addSong(temp_song);
         }
     }
+    qInfo() << "Import finished!\n- Successful:" << success_count;
+    emit finishedWork(success_count);
+}
+
+const Playlist& ImportSongsTask::getImportedPlaylist() {
+    return imported_play_list;
+}
+
+void ImportSongsTask::clearImportedPlaylist() {
+    imported_play_list.clearPlaylist();
 }
