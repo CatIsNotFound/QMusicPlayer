@@ -1,4 +1,5 @@
 cmake-build-debug-visual-studio
+cmake-build-debug-mingw
 build
 .idea
 .vscode
