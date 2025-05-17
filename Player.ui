@@ -19,7 +19,7 @@
      <x>0</x>
      <y>0</y>
      <width>481</width>
-     <height>141</height>
+     <height>150</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -60,6 +60,9 @@
        </property>
        <property name="text">
         <string>No Media Found</string>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
        </property>
       </widget>
       <widget class="QLabel" name="label_playImage">

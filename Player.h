@@ -10,6 +10,7 @@
 #include <QAudioOutput>
 #include <QMediaMetaData>
 #include <QPointer>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Player; }
@@ -45,11 +46,13 @@ signals:
     void playControlChanged(const bool& enabled);
     void playPositionChanged(const qint64 position);
     void volumeChanged(const quint8 volume);
+    void muteVolumeChanged(const bool& enabled);
     void deviceChanged();
     void invalidMedia(const QString& url);
     void nextSongRequest();
     void lastSongRequest();
     void resetPlayer();
+    void isNotRealPlaying();
 
 public slots:
     void playAndPause();
@@ -75,6 +78,7 @@ private:
     Ui::Player *ui;
     QPointer<QMediaPlayer> mediaPlayer;
     QPointer<QAudioOutput> audioOutput;
+    QPointer<QTimer> delayer;
     bool isSliderMoved{false};
     PlayLoopMode playLoopMode{PlayLoopMode::NoLoop};
     bool playing{false};

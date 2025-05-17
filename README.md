@@ -15,8 +15,6 @@ A Simple Local Music Player Based on Qt6 Development
 
 本项目基于 GNU General Public License v3.0，仅供学习参考，**请勿用于商业途径！**
 
-
-
 具体相关内容，请见 [LICENSE](./LICENSE.txt) 文件。
 
 ## 下载安装
@@ -67,4 +65,12 @@ cmake --build .. --config Release
 4. 在这个目录下找到 `QMusicPlayer` 可执行文件就可以了！（Windows 下是 `QMusicPlayer.exe`）**但是，前提还需要 Qt6 必要的库才能运行！**
    如果在当前目录下找不到，可能在存放在 `.\Release` 目录下。
 
-5. 若在 Windows 环境下，请记得使用 `windeployqt.exe` (位于 Qt 安装目录下) 来复制此程序所需的文件！ 
+5. 若在 Windows 环境下，请记得使用 `windeployqt.exe` (位于 Qt 安装目录下) 来复制此程序所需的文件！
+
+> 关于 Taglib 需要注意：
+> 
+> Windows 环境下需要复制 `tag.dll`（MSVC）或 `libtag.dll`（MinGW）文件到程序同级目录。
+> 
+> - MSVC 下位于：`\path\to\QMusicPlayer\3rdParty\taglib-2.0.2-MSVC\bin`
+> - MinGW 下位于：`\path\to\QMusicPlayer\3rdParty\taglib-2.0.2-MinGW\bin`
+> 

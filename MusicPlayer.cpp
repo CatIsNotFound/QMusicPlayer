@@ -27,12 +27,16 @@ MusicPlayer::MusicPlayer(QWidget *parent) :
     trayIcon->setToolTip(QApplication::applicationName());
     setupList();
     setupConnection();
+    setupOptions();
     setupOthers();
     setWindowTitle(QApplication::applicationName());
 }
 
 MusicPlayer::~MusicPlayer() {
     delete ui;
+    for (auto& task : multi_import_task) {
+        delete task;
+    }
 }
 
 void MusicPlayer::setupConnection() {
@@ -81,7 +85,7 @@ void MusicPlayer::setupConnection() {
 
     // 播放器
     connect(ui->playerWidget, &Player::invalidMedia, this, [this](const QString& url) {
-        QMessageBox::critical(this, "无法打开", QString("无法打开并播放文件 %1，可能此文件不是有效的可播放音乐文件！").arg(url));
+        trayIcon->showMessage("无法播放", QString("文件 %1 无法播放，可能该文件路径无效或此文件不是有效的可播放文件！").arg(url), QSystemTrayIcon::Critical);
     });
     connect(ui->playerWidget, &Player::songsChanged, this, &MusicPlayer::getSongInfo);
     connect(ui->playerWidget, &Player::playControlChanged, [this](const bool enabled) {
@@ -93,6 +97,9 @@ void MusicPlayer::setupConnection() {
         setWindowTitle(QApplication::applicationName());
         trayIcon->setToolTip(QApplication::applicationName());
         status_playing->setText("当前无媒体播放");
+    });
+    connect(ui->playerWidget, &Player::muteVolumeChanged, [this](const bool& enabled) {
+        ui->action_VolumeMute->setChecked(enabled);
     });
     connect(ui->playerWidget, &Player::nextSongRequest, this, &MusicPlayer::nextSong);
     connect(ui->playerWidget, &Player::lastSongRequest, this, &MusicPlayer::lastSong);
@@ -136,11 +143,65 @@ void MusicPlayer::setupList() {
     ui->tabWidget->addTab(table, "播放列表");
 }
 
+void MusicPlayer::setupOptions()
+{
+    if (Apps::loadAppOptions(app_options)) {
+        ui->playerWidget->setPlayLoopMode(app_options.playLoopMode);
+        ui->playerWidget->changeVolume(app_options.volume);
+        if (app_options.mutedVolume) ui->playerWidget->muteVolume();
+        // playlist
+        add_songs_task = new AddMultiSongsTask(app_options.path_list);
+        connect(add_songs_task, &AddMultiSongsTask::addSongToList, [this] (const Playlist::Song& new_song) {
+            uint idx = playlist.findSongByPath(new_song.path);
+            if (idx == UINT16_MAX) {
+                playlist.addSongToList(new_song);
+                addSongToPlaylist(new_song);
+            }
+        });
+        connect(add_songs_task, &AddMultiSongsTask::finishedWork, [this] {
+            add_songs_task->clearTaskList();
+        });
+        add_songs_task->start();
+        // Window
+        if (app_options.window_state == 0)
+            setWindowState(Qt::WindowMinimized);
+        else if (app_options.window_state == 1)
+            setWindowState(Qt::WindowActive);
+        else if (app_options.window_state == 2)
+            setWindowState(Qt::WindowMaximized);
+        if (app_options.window_state == 1) {
+            resize(app_options.window_width, app_options.window_height);
+        }
+    }
+}
+
 void MusicPlayer::setupOthers() {
     status_list = new QLabel("当前播放列表共 0 项");
     status_playing = new QLabel("当前无媒体播放");
     ui->statusbar->addWidget(status_list, 1);
     ui->statusbar->addWidget(status_playing);
+}
+
+void MusicPlayer::saveOptions() {
+    // Player
+    app_options.playLoopMode = ui->playerWidget->getPlayLoopMode();
+    app_options.volume = ui->playerWidget->volume();
+    app_options.mutedVolume = ui->playerWidget->isMuted();
+    // Playlist
+    app_options.path_list.clear();
+    for (uint i = 0; i < playlist.getSongCount(); ++i) {
+        app_options.path_list.emplace_back(playlist.getSongByIndex(i).path);
+    }
+    // Window
+    app_options.window_width = width();
+    app_options.window_height = height();
+    if (windowState() == Qt::WindowMinimized)
+        app_options.window_state = 0;
+    else if (windowState() == Qt::WindowActive)
+        app_options.window_state = 1;
+    else if (windowState() == Qt::WindowMaximized)
+        app_options.window_state = 2;
+    Apps::saveAppOptions(app_options);
 }
 
 void MusicPlayer::updateSelectionCount() {
@@ -151,6 +212,30 @@ void MusicPlayer::updateSelectionCount() {
     } else {
         status_list->setText(QString("当前播放列表共 %1 项").arg(model->rowCount()));
     }
+}
+
+bool MusicPlayer::addFileToPlaylist(const QString &url) {
+    uint idx = playlist.findSongByPath(url);
+    if (idx == UINT16_MAX) {
+        Playlist::Song temp_song;
+        if (playlist.parseSongFromFileName(url, temp_song)) {
+            addSongToPlaylist(temp_song);
+            return true;
+        } else {
+            QMessageBox::critical(this, "导入失败", QString("无法导入文件 %1，此文件不是有效的可播放文件！").arg(url));
+            return false;
+        }
+    }
+    return false;
+}
+
+void MusicPlayer::addSongToPlaylist(const Playlist::Song &temp_song) {
+    QList<QStandardItem*> item_list;
+    item_list.emplace_back(new QStandardItem(temp_song.title));
+    item_list.emplace_back(new QStandardItem(temp_song.artist));
+    item_list.emplace_back(new QStandardItem(temp_song.album));
+    item_list.emplace_back(new QStandardItem(temp_song.path));
+    model->appendRow(item_list);
 }
 
 void MusicPlayer::nextSong() {
@@ -200,16 +285,49 @@ void MusicPlayer::resizeEvent(QResizeEvent *event) {
 
 void MusicPlayer::closeEvent(QCloseEvent *event) {
     event->ignore();
+    if (is_not_closed) {
+        trayIcon->showMessage(QApplication::applicationName(), "请注意：程序仍在运行，不要忘记从托盘图标中打开！", QSystemTrayIcon::Information, 5000);
+    } else saveOptions();
     hide();
 }
 
-void MusicPlayer::hideEvent(QHideEvent *event) {
-    if (is_not_closed) trayIcon->showMessage(QApplication::applicationName(), "请注意：程序仍在运行，不要忘记从托盘图标中打开！");
+void MusicPlayer::dragEnterEvent(QDragEnterEvent *event) {
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
 }
 
+void MusicPlayer::dropEvent(QDropEvent *event)
+{
+    auto url_list = event->mimeData()->urls();
+    for (auto& url : url_list) {
+        QString real_url = url.path();
+        if (!QSysInfo::kernelType().compare("winnt")) {
+            real_url = real_url.removeFirst();
+        }
+        QFileInfo file(real_url);
+        if (file.isDir()) {
+            ImportSongsTask* task = new ImportSongsTask(real_url);
+            connect(task, &ImportSongsTask::finishedWork, [&](int success_cnt) {
+                trayIcon->showMessage("导入成功", QString("已成功导入 %1 个文件").arg(success_cnt));
+            });
+            connect(task, &ImportSongsTask::addSong, [&] (const Playlist::Song& new_song) {
+                uint idx = playlist.findSongByPath(new_song.path);
+                if (idx == UINT16_MAX) {
+                    playlist.addSongToList(new_song);
+                    addSongToPlaylist(new_song);
+                }
+            });
+            multi_import_task.emplace_back(task);
+            task->start();
+        }
+        else if (file.isFile()) addFileToPlaylist(real_url);
+    }
+    status_list->setText(QString("当前播放列表共 %1 项").arg(model->rowCount()));
+}
+
+
 void MusicPlayer::openFileAndPlayFile() {
-    QFileDialog fileDialog;
-    QString fileName = fileDialog.getOpenFileName(this, "打开...", QDir::homePath(), "MP3文件(*.mp3);;FLAC文件(*.flac);;音频文件(*.wav);;所有文件(*.*)");
+    QString fileName = QFileDialog::getOpenFileName(this, "打开...", QDir::homePath(), "MP3文件(*.mp3);;FLAC文件(*.flac);;OGG文件(*.ogg);;音频文件(*.wav);;所有文件(*.*)");
     if (fileName.isEmpty()) return;
     qDebug() << "Open:" << fileName;
     ui->playerWidget->playSongImmediately(fileName);
@@ -227,12 +345,12 @@ void MusicPlayer::playPause() {
 
 void MusicPlayer::getSongInfo(const QString &url) {
     TagLib::FileRef f(url.toStdString().data());
-    if (!f.isNull() && f.tag()) {
-        qInfo() << "[Songs Detail]";
-        qInfo() << "Title: " << f.tag()->title().toCString(true);
-        qInfo() << "Artist: " << f.tag()->artist().toCString(true);
-        qInfo() << "Album: " << f.tag()->album().toCString(true);
-    }
+//    if (!f.isNull() && f.tag()) {
+//        qDebug() << "[Songs Detail]";
+//        qDebug() << "Title: " << f.tag()->title().toCString(true);
+//        qDebug() << "Artist: " << f.tag()->artist().toCString(true);
+//        qDebug() << "Album: " << f.tag()->album().toCString(true);
+//    }
     status_playing->setText(url.right(url.size()- url.lastIndexOf('/') - 1));
     setWindowTitle(QString("%1 - %2").arg(url.right(url.size()- url.lastIndexOf('/') - 1)).arg(QApplication::applicationName()));
     trayIcon->setToolTip(QString("%1 - %2").arg(url.right(url.size()- url.lastIndexOf('/') - 1)).arg(QApplication::applicationName()));
@@ -250,18 +368,13 @@ void MusicPlayer::playSongFromList() {
 }
 
 void MusicPlayer::importSongToList() {
-    auto file_name = QFileDialog::getOpenFileName(this, "导入歌曲到播放列表", QDir::homePath(), "MP3文件(*.mp3);;FLAC文件(*.flac);;音频文件(*.wav);;所有文件(*.*)");
+    auto file_name = QFileDialog::getOpenFileName(this, "导入歌曲到播放列表", QDir::homePath(), "MP3文件(*.mp3);;FLAC文件(*.flac);;OGG文件(*.ogg);;音频文件(*.wav);;所有文件(*.*)");
     if (file_name.isEmpty()) return;
     Playlist::Song temp_song;
     uint idx = playlist.findSongByPath(file_name);
     if (idx != UINT16_MAX) return;
     if (playlist.parseSongFromFileName(file_name, temp_song)) {
-        QList<QStandardItem*> item_list;
-        item_list.emplace_back(new QStandardItem(temp_song.title));
-        item_list.emplace_back(new QStandardItem(temp_song.artist));
-        item_list.emplace_back(new QStandardItem(temp_song.album));
-        item_list.emplace_back(new QStandardItem(temp_song.path));
-        model->appendRow(item_list);
+        addSongToPlaylist(temp_song);
     } else {
         qCritical().noquote() << "[Error] File" << file_name << "can not parse!";
         QMessageBox::critical(this, "无法导入", QString("文件 %1 不是有效或可解析的音乐文件！").arg(file_name));
@@ -272,22 +385,20 @@ void MusicPlayer::importSongToList() {
 void MusicPlayer::importSongDirectoryToList() {
     auto dir_name = QFileDialog::getExistingDirectory(this, "导入歌曲目录到列表", QDir::homePath());
     if (dir_name.isEmpty()) return;
-    qInfo() << "Import Directory: " << dir_name;
+//    qDebug() << "Import Directory: " << dir_name;
     if (!import_task) {
         import_task = new ImportSongsTask();
-        qInfo() << "Create Import task!";
+//        qDebug() << "Create Import task!";
         connect(import_task, &ImportSongsTask::finishedWork, [this] (int count) {
             import_task->clearImportedPlaylist();
             status_list->setText(QString("此次共导入了 %1 首歌曲！").arg(count));
         });
         connect(import_task, &ImportSongsTask::addSong, [this] (const Playlist::Song& song) {
-            QList<QStandardItem *> item_list;
-            playlist.addSongToList(song);
-            item_list.emplace_back(new QStandardItem(song.title));
-            item_list.emplace_back(new QStandardItem(song.artist));
-            item_list.emplace_back(new QStandardItem(song.album));
-            item_list.emplace_back(new QStandardItem(song.path));
-            model->appendRow(item_list);
+            uint idx = playlist.findSongByPath(song.path);
+            if (idx == UINT16_MAX) {
+                playlist.addSongToList(song);
+                addSongToPlaylist(song);
+            }
         });
     }
     import_task->setDirectory(dir_name);
@@ -323,7 +434,7 @@ void MusicPlayer::removeSongFromList() {
         // 若此索引已是最后一首，选择第一首歌曲；
         // 若后面仍有歌曲，则索引不变；
         // 若列表为空，直接停止播放
-        if (current_playing > model->rowCount()) {
+        if (current_playing == model->rowCount() && model->rowCount() > 0) {
             firstSong();
         } else if (current_playing > -1 && current_playing < model->rowCount()) {
             replayCurrentSong();
@@ -339,8 +450,6 @@ void MusicPlayer::removeSongFromList() {
         }
     }
 
-    qDebug() << "Row count:" << model->rowCount();
-    qDebug() << "Song count:" << playlist.getSongCount();
     status_list->setText(QString("当前播放列表共 %1 项").arg(model->rowCount()));
 }
 
@@ -371,20 +480,20 @@ void MusicPlayer::showVersion() {
 }
 
 void ImportSongsTask::run() {
-    qInfo() << "Import Task is started!";
+    qDebug() << "Import Task is started!";
     QDir dir(directory_name);
     int success_count = 0;
     auto songs_list = dir.entryList(QDir::Files);
     for (auto& song : songs_list) {
         QString path = directory_name + "/" + song;
-        qInfo() << "Import:" << song;
+        qDebug() << "Import:" << song;
         Playlist::Song temp_song;
         if (imported_play_list.parseSongFromFileName(path, temp_song)) {
             success_count++;
             emit addSong(temp_song);
         }
     }
-    qInfo() << "Import finished!\n- Successful:" << success_count;
+    qDebug() << "Import finished!\n- Successful:" << success_count;
     emit finishedWork(success_count);
 }
 
@@ -394,4 +503,38 @@ const Playlist& ImportSongsTask::getImportedPlaylist() {
 
 void ImportSongsTask::clearImportedPlaylist() {
     imported_play_list.clearPlaylist();
+}
+
+AddMultiSongsTask::AddMultiSongsTask() {}
+
+AddMultiSongsTask::AddMultiSongsTask(QList<QString> &urls) {
+    for (auto& i : urls) {
+        path_list.emplace_back(i);
+    }
+}
+
+void AddMultiSongsTask::setTaskList(const QList<QString> &urls) {
+    for (auto& i : urls) {
+        path_list.emplace_back(i);
+    }
+}
+
+void AddMultiSongsTask::clearTaskList() {
+    added_playlist.clearPlaylist();
+    path_list.clear();
+}
+
+void AddMultiSongsTask::run() {
+    uint success_count = 0;
+    for (auto& song : path_list) {
+        qDebug() << "Import:" << song;
+        Playlist::Song temp_song;
+        if (added_playlist.parseSongFromFileName(song, temp_song)) {
+            success_count++;
+            emit addSongToList(temp_song);
+        }
+    }
+    qDebug() << "Import finished!\n- Successful:" << success_count;
+
+    emit finishedWork();
 }

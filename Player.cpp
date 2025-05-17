@@ -11,7 +11,35 @@ Player::Player(QWidget *parent) :
     audioOutput = new QAudioOutput;
     audioOutput->setDevice(QMediaDevices::defaultAudioOutput());
     mediaPlayer->setAudioOutput(audioOutput);
+    delayer = new QTimer(this);
+    delayer->setSingleShot(true);
+    connect(delayer, &QTimer::timeout, [this] {
+        playing = false;
+        emit isNotRealPlaying();
+    });
+    connect(this, &Player::isNotRealPlaying, [this] {
+        if (!playing && mediaPlayer->playbackState() == QMediaPlayer::PlayingState) {
+            playing = true;
+            mediaPlayer->stop();
+            mediaPlayer->play();
+        }
+    });
     connect(mediaPlayer, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
+    connect(mediaPlayer, &QMediaPlayer::mediaStatusChanged, [this] (QMediaPlayer::MediaStatus status) {
+        if (status == QMediaPlayer::EndOfMedia && playLoopMode == PlayLoopMode::ListLoop) {
+            emit nextSongRequest();
+        } else if (status == QMediaPlayer::EndOfMedia && playLoopMode == PlayLoopMode::NoLoop) {
+            stop();
+        } else if (status == QMediaPlayer::InvalidMedia) {
+            if (playLoopMode == PlayLoopMode::ListLoop) {
+                ui->label_playSong->setText("Invalid Media! Next one will play after 3 sec!");
+                QTimer::singleShot(3000, [&] { emit nextSongRequest(); });
+            } else {
+                ui->label_playSong->setText("Invalid Media!");
+            }
+            emit invalidMedia(mediaPlayer->source().path());
+        }
+    });
     connect(ui->toolButton_PlayPauseSong, &QToolButton::clicked, this, &Player::playAndPause);
     connect(ui->toolButton_StopSong, &QToolButton::clicked, this, &Player::stop);
     connect(ui->toolButton_Volume, &QToolButton::clicked, this, [&] {
@@ -35,12 +63,16 @@ Player::Player(QWidget *parent) :
 
     connect(ui->volumeSlider, &QSlider::valueChanged, this, [&](int value){
         if (audioOutput->isMuted()) {
-            audioOutput->setMuted(false);
-            ui->toolButton_Volume->setIcon(QIcon(":/assets/声音-大_volume-notice.svg"));
+            if (isMuted()) muteVolume();
         }
         audioOutput->setVolume(value / 100.0);
         ui->label_volume->setText(QString::number(ui->volumeSlider->value()));
-        ui->toolButton_Volume->setToolTip(QString("音量：%1%").arg(ui->volumeSlider->value()));
+        if (value > 0) {
+            ui->toolButton_Volume->setToolTip(QString("音量：%1%").arg(ui->volumeSlider->value()));
+            ui->toolButton_Volume->setIcon(QIcon(":/assets/声音-大_volume-notice.svg"));
+        } else {
+            if (!isMuted()) muteVolume();
+        }
     });
     connect(mediaPlayer, &QMediaPlayer::metaDataChanged, this, &Player::metaDataChanged);
     connect(ui->playPositionSlider, &QSlider::sliderPressed, [&]{ isSliderMoved = true; });
@@ -79,14 +111,6 @@ void Player::positionChanged(qint64 position) {
     qint64 pa = duration / 1000;
     ui->label_playProcess->setText(QString::asprintf("%d:%02d / %lld:%02lld", min, sec, pa / 60, pa % 60));
     if (!isSliderMoved) ui->playPositionSlider->setValue(position / (duration * 1.0) * 100);
-    // 当歌曲即将结束
-    if (position >= duration) {
-        if (playLoopMode == PlayLoopMode::ListLoop) {
-            emit nextSongRequest();
-        } else if (playLoopMode == PlayLoopMode::NoLoop) {
-            stop();
-        }
-    }
 }
 
 void Player::setEnabledControls(const bool enabled) {
@@ -125,9 +149,9 @@ void Player::play() {
         ui->label_playSong->setText("No Media Found!");
     } else {
         mediaPlayer->play();
+        playing = true;
         ui->toolButton_PlayPauseSong->setIcon(QIcon(":/assets/pauseSong.svg"));
         setPlayerControls(true);
-        playing = true;
     }
 }
 
@@ -146,8 +170,18 @@ void Player::stop() {
 
 void Player::playSongImmediately(const QString &url) {
     stop();
-    mediaPlayer->setSource(QUrl::fromLocalFile(url));
+    // 对于打开完全一样的路径，直接忽略更改
+    QUrl newUrl = QUrl::fromLocalFile(url);
+    if (mediaPlayer->source() == newUrl) {
+        play();
+        setEnabledControls(true);
+        return;
+    }
+    mediaPlayer->setSource(newUrl);
     play();
+    if (!QSysInfo::kernelType().compare("linux")) {
+        delayer->start(500);
+    }
     setEnabledControls(true);
     emit songsChanged(url);
 }
@@ -177,7 +211,7 @@ void Player::setPlayLoopMode(const PlayLoopMode &loopMode) {
         case PlayLoopMode::ListLoop:
             ui->toolButton_PlayMode->setIcon(QIcon(":/assets/循环播放_play-cycle.svg"));
             ui->toolButton_PlayMode->setToolTip("列表循环");
-            mediaPlayer->setLoops(-1);
+            mediaPlayer->setLoops(1);
             break;
         case PlayLoopMode::SingleSongLoop:
             ui->toolButton_PlayMode->setIcon(QIcon(":/assets/循环一次_loop-once.svg"));
@@ -212,6 +246,7 @@ void Player::changeVolume(const int volume) {
 
 void Player::muteVolume() {
     audioOutput->setMuted(!audioOutput->isMuted());
+    emit muteVolumeChanged(isMuted());
     if (isMuted()) {
         ui->toolButton_Volume->setIcon(QIcon(":/assets/静音_volume-mute.svg"));
         ui->toolButton_Volume->setToolTip("已静音");

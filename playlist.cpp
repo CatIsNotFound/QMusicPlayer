@@ -68,7 +68,10 @@ const Playlist::Song Playlist::getSongByPath(const QString &path) {
 bool Playlist::parseSongFromFileName(const QString &path, Song &song) {
     QFileInfo file(path);
     // 判断是否是文件
-    if (!file.isFile()) return false;
+    if (!file.isFile()) {
+        qDebug() << "[Debug] File is not valid!";
+        return false;
+    }
     QByteArray codec = file.absoluteFilePath().toLocal8Bit();
     // 解析音乐文件
     qDebug() << "[Debug] Parsed" << codec.toStdString().c_str();
@@ -94,8 +97,11 @@ bool Playlist::parseSongFromFileName(const QString &path, Song &song) {
         temp_song.title = m_title;
         QString artist = music_tag->artist().toCString(true);
         QString album = music_tag->album().toCString(true);
-        temp_song.artist = (artist.isEmpty() ? "未知歌手" : artist);
-        temp_song.album = (album.isEmpty() ? "未知专辑" : album);
+        temp_song.artist = (artist.simplified().isEmpty() ? "未知歌手" : artist);
+        temp_song.album = (album.simplified().isEmpty() ? "未知专辑" : album);
+    } else {
+        temp_song.album = "未知专辑";
+        temp_song.artist = "未知歌手";
     }
     // 已成功解析
     play_list.emplace_back(temp_song);

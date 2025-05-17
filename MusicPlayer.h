@@ -16,6 +16,7 @@
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
 #include <QThread>
+#include <QMimeData>
 #include <taglib/fileref.h>
 #include <taglib/tag.h>
 #include <taglib/flacfile.h>
@@ -23,6 +24,7 @@
 #include "Player.h"
 #include "AboutApp.h"
 #include "playlist.h"
+#include "AppConfig.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MusicPlayer; }
@@ -49,6 +51,23 @@ private:
     Playlist imported_play_list;
 };
 
+class AddMultiSongsTask : public QThread {
+    Q_OBJECT
+public:
+    AddMultiSongsTask();
+    AddMultiSongsTask(QList<QString> &urls);
+
+    void setTaskList(const QList<QString> &urls);
+    void clearTaskList();
+    void run() override;
+signals:
+    void addSongToList(const Playlist::Song& new_song);
+    void finishedWork();
+private:
+    QList<QString> path_list;
+    Playlist added_playlist;
+};
+
 class MusicPlayer : public QMainWindow {
 Q_OBJECT
 
@@ -59,8 +78,12 @@ public:
 
     void setupConnection();
     void setupList();
+    void setupOptions();
     void setupOthers();
+    void saveOptions();
     void updateSelectionCount();
+    bool addFileToPlaylist(const QString& url);
+    void addSongToPlaylist(const Playlist::Song& song);
 
 public slots:
     void nextSong();
@@ -71,7 +94,8 @@ protected:
     void replayCurrentSong();
     void resizeEvent(QResizeEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
-    void hideEvent(QHideEvent *event) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent* event) override;
 
 protected slots:
     void openFileAndPlayFile();
@@ -97,6 +121,9 @@ private:
     Playlist playlist;
     qint64 current_playing{-1};
     QPointer<ImportSongsTask> import_task;
+    QList<ImportSongsTask*> multi_import_task;
+    QPointer<AddMultiSongsTask> add_songs_task;
+    AppOptions app_options{};
     bool is_not_closed{true};
 };
 
