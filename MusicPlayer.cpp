@@ -502,7 +502,7 @@ void MusicPlayer::showOptions() {
     auto audio_list = ui->playerWidget->getAllAudioDevice();
     // 获取当前的输出设备
     options_window->setAudioDeviceList(audio_list);
-    options_window->getCurrentAudioDevice(ui->playerWidget->getCurrentAudioDevice());
+//    options_window->getCurrentAudioDevice(ui->playerWidget->getCurrentAudioDevice());
     options_window->setupAppConfig(app_options);
     options_window->show();
 }

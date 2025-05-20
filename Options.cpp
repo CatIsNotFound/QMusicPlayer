@@ -11,7 +11,7 @@ Options::Options(QWidget *parent) :
     setMaximumSize(width(), height());
     connect(ui->pushButton_ApplySettings, &QPushButton::clicked, this, &Options::saveAppConfig);
     connect(ui->pushButton_browser, &QPushButton::clicked, [this] {
-        QString file_path = QFileDialog::getOpenFileName(this, "打开主题文件...", QDir::currentPath(), "(*.qss)主题文件");
+        QString file_path = QFileDialog::getOpenFileName(this, "打开主题文件...", QDir::currentPath(), "主题文件(*.qss)");
         if (!file_path.isEmpty()) {
             if (!isExistThemeFile(file_path)) {
                 ui->comboBox_themeConfig->addItem(file_path);
