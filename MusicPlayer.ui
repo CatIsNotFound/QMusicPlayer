@@ -70,7 +70,7 @@
      <x>0</x>
      <y>0</y>
      <width>534</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_F">
@@ -118,6 +118,10 @@
     <addaction name="action_ImportSong"/>
     <addaction name="action_ImportMoreSongsToList"/>
     <addaction name="action_ClearList"/>
+    <addaction name="separator"/>
+    <addaction name="action_MoveDownSong"/>
+    <addaction name="action_MoveUpSong"/>
+    <addaction name="action_MoveTopSong"/>
    </widget>
    <addaction name="menu_F"/>
    <addaction name="menu_P"/>
@@ -356,7 +360,7 @@
   <action name="action_Options">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/assets/24gf-fileText.svg</normaloff>:/assets/24gf-fileText.svg</iconset>
+     <normaloff>:/assets/配置_config.svg</normaloff>:/assets/配置_config.svg</iconset>
    </property>
    <property name="text">
     <string>首选项(&amp;P)</string>
@@ -366,6 +370,42 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="action_MoveDownSong">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/箭头下_arrow-down.svg</normaloff>:/assets/箭头下_arrow-down.svg</iconset>
+   </property>
+   <property name="text">
+    <string>向下移动所选歌曲(&amp;D)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Down</string>
+   </property>
+  </action>
+  <action name="action_MoveUpSong">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/箭头上_arrow-up.svg</normaloff>:/assets/箭头上_arrow-up.svg</iconset>
+   </property>
+   <property name="text">
+    <string>向上移动所选歌曲(&amp;U)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Up</string>
+   </property>
+  </action>
+  <action name="action_MoveTopSong">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/assets/去顶部_to-top.svg</normaloff>:/assets/去顶部_to-top.svg</iconset>
+   </property>
+   <property name="text">
+    <string>将所选歌曲置为顶部</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Up</string>
    </property>
   </action>
  </widget>

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Options</class>
+ <widget class="QDialog" name="Options">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>532</width>
+    <height>380</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>首选项</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resource.qrc">
+    <normaloff>:/assets/配置_config.svg</normaloff>:/assets/配置_config.svg</iconset>
+  </property>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>511</width>
+     <height>321</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab">
+    <attribute name="icon">
+     <iconset resource="resource.qrc">
+      <normaloff>:/assets/playSong.svg</normaloff>:/assets/playSong.svg</iconset>
+    </attribute>
+    <attribute name="title">
+     <string>播放</string>
+    </attribute>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>481</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>音频输出</string>
+     </property>
+     <widget class="QComboBox" name="comboBox_DefaultAudioDevice">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>25</y>
+        <width>331</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>28</y>
+        <width>111</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>设置音频设备:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>481</width>
+       <height>161</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>播放器</string>
+     </property>
+     <widget class="QCheckBox" name="checkBox_PlayMusic">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>421</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>启动软件后立刻播放音乐</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_savePlayingID">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>421</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>退出时记住当前正在播放的歌曲（不包含播放进度）</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_pausedSong">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>90</y>
+        <width>421</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>若当前默认音频设备发生改变时，暂停当前正在播放的歌曲</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_autoChangeAudioDevice">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>120</y>
+        <width>421</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>若当前默认音频设备发生改变时，自动切换新的默认音频设备</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="widget">
+    <attribute name="icon">
+     <iconset resource="resource.qrc">
+      <normaloff>:/assets/配置_config.svg</normaloff>:/assets/配置_config.svg</iconset>
+    </attribute>
+    <attribute name="title">
+     <string>其它</string>
+    </attribute>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>481</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>界面</string>
+     </property>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>主题配置：</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_themeConfig">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>28</y>
+        <width>271</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <item>
+       <property name="text">
+        <string>系统默认</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QPushButton" name="pushButton_browser">
+      <property name="geometry">
+       <rect>
+        <x>380</x>
+        <y>27</y>
+        <width>75</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>浏览(&amp;B)</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>481</width>
+       <height>131</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>通知</string>
+     </property>
+     <widget class="QCheckBox" name="checkBox_notify1">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>431</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>关闭主界面时总是显示通知</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_notify2">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>431</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>启动软件后，若当前主界面处于最小化，则显示通知</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_notify3">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>90</y>
+        <width>431</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>隐藏主界面时，若切换歌曲，则显示通知</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="pushButton_ApplySettings">
+   <property name="geometry">
+    <rect>
+     <x>364</x>
+     <y>340</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>确定(&amp;O)</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_Cancel">
+   <property name="geometry">
+    <rect>
+     <x>440</x>
+     <y>340</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>取消(&amp;C)</string>
+   </property>
+  </widget>
+ </widget>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>pushButton_Cancel</sender>
+   <signal>clicked()</signal>
+   <receiver>Options</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>477</x>
+     <y>351</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>265</x>
+     <y>189</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

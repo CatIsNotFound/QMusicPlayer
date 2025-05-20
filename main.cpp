@@ -4,7 +4,7 @@
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     a.setApplicationName("QMusicPlayer");
-    a.setApplicationVersion("v0.1.2-beta");
+    a.setApplicationVersion("v0.2.1-beta");
     a.setWindowIcon(QIcon(":/assets/appicon.ico"));
     MusicPlayer player;
     player.show();

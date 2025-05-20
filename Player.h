@@ -40,6 +40,11 @@ public:
     void dropOutSong();
     void setPlayLoopMode(const PlayLoopMode& loopMode);
     const PlayLoopMode& getPlayLoopMode() const;
+    QList<QAudioDevice> getAllAudioDevice();
+    const QAudioDevice& getCurrentAudioDevice() const;
+    void setAutoChangeOutputSwitch(const bool &b);
+    void setAutoPausedSwitch(const bool &b);
+
 
 signals:
     void songsChanged(const QString& url);
@@ -47,7 +52,7 @@ signals:
     void playPositionChanged(const qint64 position);
     void volumeChanged(const quint8 volume);
     void muteVolumeChanged(const bool& enabled);
-    void deviceChanged();
+    void deviceChanged(const QAudioDevice& device);
     void invalidMedia(const QString& url);
     void nextSongRequest();
     void lastSongRequest();
@@ -60,6 +65,7 @@ public slots:
     void pause();
     void stop();
     void playSongImmediately(const QString& url);
+    void setSong(const QString& url);
     void changeVolume(const int volume);
     void muteVolume();
     void changeAudioDevice(const QAudioDevice& audioDevice);
@@ -67,21 +73,26 @@ public slots:
     void changePlayPosition();
     void backward3Sec();
     void forward3Sec();
+    void sendNextSongRequest();
+    void sendLastSongRequest();
 
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void positionChanged(qint64 position);
-    QList<QAudioDevice> getAllAudioDevice();
+
 
 private:
     Ui::Player *ui;
+    QPointer<QMediaDevices> mediaDevices;
     QPointer<QMediaPlayer> mediaPlayer;
     QPointer<QAudioOutput> audioOutput;
     QPointer<QTimer> delayer;
     bool isSliderMoved{false};
     PlayLoopMode playLoopMode{PlayLoopMode::NoLoop};
     bool playing{false};
+    bool audioOutputSwitch{false};
+    bool audioPausedSwitch{false};
 };
 
 

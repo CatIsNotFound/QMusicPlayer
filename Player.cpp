@@ -13,6 +13,19 @@ Player::Player(QWidget *parent) :
     mediaPlayer->setAudioOutput(audioOutput);
     delayer = new QTimer(this);
     delayer->setSingleShot(true);
+
+    mediaDevices = new QMediaDevices(this);
+    connect(mediaDevices, &QMediaDevices::audioOutputsChanged, [this] {
+        // qDebug() << "Device changed!";
+        if (audioOutputSwitch) {
+            audioOutput->setDevice(QMediaDevices::defaultAudioOutput());
+            emit deviceChanged(audioOutput->device());
+        }
+        if (audioPausedSwitch) {
+            pause();
+        }
+    });
+
     connect(delayer, &QTimer::timeout, [this] {
         playing = false;
         emit isNotRealPlaying();
@@ -49,8 +62,8 @@ Player::Player(QWidget *parent) :
     });
     connect(ui->toolButton_Backward, &QToolButton::clicked, this, &Player::backward3Sec);
     connect(ui->toolButton_Forward, &QToolButton::clicked, this, &Player::forward3Sec);
-    connect(ui->toolButton_LastSong, &QToolButton::clicked, [&] { emit lastSongRequest(); });
-    connect(ui->toolButton_NextSong, &QToolButton::clicked, [&] { emit nextSongRequest(); });
+    connect(ui->toolButton_LastSong, &QToolButton::clicked, [this] { emit lastSongRequest(); });
+    connect(ui->toolButton_NextSong, &QToolButton::clicked, [this] { emit nextSongRequest(); });
     connect(ui->toolButton_PlayMode, &QToolButton::clicked, [this] {
         if (playLoopMode == PlayLoopMode::NoLoop) {
             setPlayLoopMode(PlayLoopMode::SingleSongLoop);
@@ -104,6 +117,7 @@ void Player::positionChanged(qint64 position) {
         ui->label_playSong->setText("Invalid Media!");
         emit invalidMedia(mediaPlayer->source().toString());
     }
+
     qint64 p = position / 1000;
     int min = p / 60;
     int sec = p % 60;
@@ -186,6 +200,11 @@ void Player::playSongImmediately(const QString &url) {
     emit songsChanged(url);
 }
 
+void Player::setSong(const QString &url) {
+    mediaPlayer->setSource(url);
+    setEnabledControls(true);
+}
+
 const bool Player::isPlayingSong() const { return playing; }
 
 const int Player::volume() const { return audioOutput->volume() * 100; }
@@ -223,6 +242,18 @@ void Player::setPlayLoopMode(const PlayLoopMode &loopMode) {
 
 const PlayLoopMode& Player::getPlayLoopMode() const { return playLoopMode; }
 
+const QAudioDevice& Player::getCurrentAudioDevice() const {
+    return audioOutput->device();
+}
+
+void Player::setAutoChangeOutputSwitch(const bool &b) {
+    audioOutputSwitch = b;
+}
+
+void Player::setAutoPausedSwitch(const bool &b) {
+    audioPausedSwitch = b;
+}
+
 void Player::changeVolume(const int volume) {
     audioOutput->setMuted(false);
     if (volume > 100) {
@@ -258,7 +289,7 @@ void Player::muteVolume() {
 
 void Player::changeAudioDevice(const QAudioDevice &audioDevice) {
     audioOutput->setDevice(audioDevice);
-    emit deviceChanged();
+    emit deviceChanged(audioDevice);
 }
 
 QList<QAudioDevice> Player::getAllAudioDevice() {
@@ -319,4 +350,12 @@ void Player::backward3Sec() {
 void Player::forward3Sec() {
     int64_t pos = mediaPlayer->position();
     mediaPlayer->setPosition(pos + 3000);
+}
+
+void Player::sendNextSongRequest() {
+    emit nextSongRequest();
+}
+
+void Player::sendLastSongRequest() {
+    emit lastSongRequest();
 }

@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>AboutApp</string>
+   <string>关于本软件</string>
   </property>
   <widget class="QLabel" name="label_icon">
    <property name="geometry">
@@ -94,8 +94,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;本软件使用了以下开源项目：&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Qt6（界面设计及其开发）&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- &lt;a href=&quot;https://github.com/FFmpeg/FFmpeg&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008ead;&quot;&gt;FFmpeg&lt;/span&gt;&lt;/a&gt; （音视频必备开源开发库）&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- &lt;a href=&quot;https://github.com/taglib/taglib&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008ead;&quot;&gt;TagLib ver-2.0.2&lt;/span&gt;&lt;/a&gt; （一个可以直接解析元数据的项目）&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- &lt;a href=&quot;https://github.com/nlohmann/json&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008ead;&quot;&gt;Nlohnman Json&lt;/span&gt;&lt;/a&gt; （万能的 Json 解析神器）&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- &lt;a href=&quot;https://github.com/bytedance/iconpark&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008ead;&quot;&gt;IconPark&lt;/span&gt;&lt;/a&gt;（开源图标设计库）&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;本项目仅供学习参考，请勿使用商业用途！&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -120,7 +122,25 @@ li.checked::marker { content: &quot;\2612&quot;; }
     <string>确定</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="pushButton_Release">
+   <property name="geometry">
+    <rect>
+     <x>204</x>
+     <y>350</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>查看软件更新</string>
+   </property>
+  </widget>
  </widget>
+ <tabstops>
+  <tabstop>textBrowser</tabstop>
+  <tabstop>pushButton_Release</tabstop>
+  <tabstop>pushButton</tabstop>
+ </tabstops>
  <resources>
   <include location="resource.qrc"/>
  </resources>

@@ -3,7 +3,7 @@
 #define QMUSICPLAYER_ABOUTAPP_H
 
 #include <QDialog>
-
+#include <QDesktopServices>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class AboutApp; }

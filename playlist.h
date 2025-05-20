@@ -33,6 +33,7 @@ public:
     const uint findSongByPath(const QString& path);
     const uint getSongCount() const;
     bool parseSongFromFileName(const QString& path, Song &song);
+    bool swap(const uint index1, const uint index2);
 
 private:
     QList<Song> play_list;

@@ -27,8 +27,8 @@ MusicPlayer::MusicPlayer(QWidget *parent) :
     trayIcon->setToolTip(QApplication::applicationName());
     setupList();
     setupConnection();
-    setupOptions();
     setupOthers();
+    setupOptions();
     setWindowTitle(QApplication::applicationName());
 }
 
@@ -52,9 +52,42 @@ void MusicPlayer::setupConnection() {
             this->setWindowState(Qt::WindowActive);
         }
     });
+    connect(ui->playerWidget, &Player::deviceChanged, [&] {
+        // qDebug() << "Device changed!";
+        if (options_window) {
+            auto audio_list = ui->playerWidget->getAllAudioDevice();
+            options_window->setAudioDeviceList(audio_list);
+        }
+    });
+
+    // 启动后自动播放或加载
+    auto_play_timer.setInterval(1000);
+    connect(&auto_play_timer, &QTimer::timeout, [this] {
+        if (model->rowCount() == 0) {
+            auto_play_timer.stop();
+            return;
+        }
+        if (app_options.auto_play_music) {
+            if (current_playing == -1) {
+                current_playing = 0;
+            }
+            model->item(current_playing)->setIcon(QIcon(":/assets/playSong.svg"));
+            getSongInfo(model->item(current_playing, 3)->text());
+            ui->playerWidget->playSongImmediately(model->item(current_playing, 3)->text());
+        } else if (app_options.remember_playlist_id) {
+            if (current_playing > -1) {
+                ui->playerWidget->setSong(model->item(current_playing, 3)->text());
+                model->item(current_playing)->setIcon(QIcon(":/assets/playSong.svg"));
+                getSongInfo(model->item(current_playing, 3)->text());
+            }
+        }
+        auto_play_timer.stop();
+    });
+    auto_play_timer.start();
 
     // 文件
     connect(ui->action_Open, &QAction::triggered, this, &MusicPlayer::openFileAndPlayFile);
+    connect(ui->action_Options, &QAction::triggered, this, &MusicPlayer::showOptions);
     connect(ui->action_Exit, &QAction::triggered, [this] { is_not_closed = false; QApplication::quit(); });
 
     // 控制播放
@@ -112,7 +145,9 @@ void MusicPlayer::setupConnection() {
     connect(ui->action_ImportMoreSongsToList, &QAction::triggered, this, &MusicPlayer::importSongDirectoryToList);
     connect(ui->action_DeleteSong, &QAction::triggered, this, &MusicPlayer::removeSongFromList);
     connect(ui->action_ClearList, &QAction::triggered, this, &MusicPlayer::clearPlayList);
-
+    connect(ui->action_MoveUpSong, &QAction::triggered, this, &MusicPlayer::moveUpSong);
+    connect(ui->action_MoveDownSong, &QAction::triggered, this, &MusicPlayer::moveDownSong);
+    connect(ui->action_MoveTopSong, &QAction::triggered, this, &MusicPlayer::moveTopSong);
 }
 
 void MusicPlayer::setupList() {
@@ -126,21 +161,30 @@ void MusicPlayer::setupList() {
     table->setSelectionMode(QTableView::ExtendedSelection);
     table->setSelectionBehavior(QTableView::SelectRows);
     table->setEditTriggers(QTableView::NoEditTriggers);
+
     connect(table, &QTableView::doubleClicked, this, &MusicPlayer::playSongFromList);
     connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MusicPlayer::updateSelectionCount);
-    listMenu = new QMenu();
-    listMenu->addAction(ui->action_PlaySongImmediately);
-    listMenu->addAction(ui->action_DeleteSong);
-    listMenu->addSeparator();
-    listMenu->addAction(ui->action_ImportSong);
-    listMenu->addAction(ui->action_ImportMoreSongsToList);
-    listMenu->addAction(ui->action_ClearList);
     connect(table, &QTableView::customContextMenuRequested, [&] {
-        listMenu->move(QCursor::pos());
-        listMenu->show();
+        QPoint cur = QCursor::pos();
+        QPoint real_pos = cur;
+        int m_width = ui->menu_P->geometry().width();
+        int m_height = ui->menu_P->geometry().height();
+
+        QSize scr_size = QGuiApplication::primaryScreen()->size();
+
+        int menu_max_X = scr_size.width() - m_width;
+        int menu_max_Y = scr_size.height() - m_height;
+        if (cur.x() >= menu_max_X) {
+            real_pos.setX(menu_max_X);
+        }
+        if (cur.y() >= menu_max_Y) {
+            real_pos.setY(menu_max_Y);
+        }
+        ui->menu_P->move(real_pos);
+        ui->menu_P->show();
     });
     ui->tabWidget->clear();
-    ui->tabWidget->addTab(table, "播放列表");
+    ui->tabWidget->addTab(table, QIcon(":/assets/音乐菜单_music-list.svg"), "播放列表");
 }
 
 void MusicPlayer::setupOptions()
@@ -148,7 +192,9 @@ void MusicPlayer::setupOptions()
     if (Apps::loadAppOptions(app_options)) {
         ui->playerWidget->setPlayLoopMode(app_options.playLoopMode);
         ui->playerWidget->changeVolume(app_options.volume);
-        if (app_options.mutedVolume) ui->playerWidget->muteVolume();
+        ui->playerWidget->setAutoChangeOutputSwitch(app_options.auto_change_audio_output);
+        ui->playerWidget->setAutoPausedSwitch(app_options.auto_pause_song_when_audio_output_changed);
+        if (app_options.muted_volume) ui->playerWidget->muteVolume();
         // playlist
         add_songs_task = new AddMultiSongsTask(app_options.path_list);
         connect(add_songs_task, &AddMultiSongsTask::addSongToList, [this] (const Playlist::Song& new_song) {
@@ -160,18 +206,46 @@ void MusicPlayer::setupOptions()
         });
         connect(add_songs_task, &AddMultiSongsTask::finishedWork, [this] {
             add_songs_task->clearTaskList();
+            if (app_options.remember_playlist_id) {
+                current_playing = app_options.playlist_id - 1;
+                if (current_playing >= playlist.getSongCount()) {
+                    current_playing = 0;
+                }
+            }
+            updateSelectionCount();
         });
         add_songs_task->start();
         // Window
-        if (app_options.window_state == 0)
+        if (app_options.window_state == 0) {
             setWindowState(Qt::WindowMinimized);
-        else if (app_options.window_state == 1)
-            setWindowState(Qt::WindowActive);
+            if (app_options.start_up_notification)
+                trayIcon->showMessage(QApplication::applicationName(), "请注意：软件已启动并最小化，请从任务栏中显示主界面！");
+        } else if (app_options.window_state == 1)
+            setWindowState(Qt::WindowNoState);
         else if (app_options.window_state == 2)
             setWindowState(Qt::WindowMaximized);
         if (app_options.window_state == 1) {
             resize(app_options.window_width, app_options.window_height);
         }
+        // Theme
+        QFile file(app_options.theme_path);
+        if (file.open(QIODevice::ReadOnly)) {
+            setStyleSheet(file.readAll());
+            file.close();
+        }
+    } else {
+        // 当没有配置文件时，自动设置默认配置
+        app_options.window_state = 1;
+        app_options.audio_output = "";
+        app_options.auto_play_music = false;
+        app_options.auto_change_audio_output = true;
+        app_options.auto_pause_song_when_audio_output_changed = true;
+        app_options.remember_playlist_id = true;
+        app_options.close_window_notification = true;
+        app_options.start_up_notification = true;
+        app_options.change_song_notification = true;
+        ui->playerWidget->setAutoChangeOutputSwitch(app_options.auto_change_audio_output);
+        ui->playerWidget->setAutoPausedSwitch(app_options.auto_pause_song_when_audio_output_changed);
     }
 }
 
@@ -186,18 +260,24 @@ void MusicPlayer::saveOptions() {
     // Player
     app_options.playLoopMode = ui->playerWidget->getPlayLoopMode();
     app_options.volume = ui->playerWidget->volume();
-    app_options.mutedVolume = ui->playerWidget->isMuted();
+    app_options.muted_volume = ui->playerWidget->isMuted();
     // Playlist
     app_options.path_list.clear();
     for (uint i = 0; i < playlist.getSongCount(); ++i) {
         app_options.path_list.emplace_back(playlist.getSongByIndex(i).path);
     }
+    if (app_options.remember_playlist_id)
+        app_options.playlist_id = current_playing + 1;
+    else
+        app_options.playlist_id = 0;
+    // Theme
+    // qDebug() << "Saved Theme Config:" << app_options.theme_path;
     // Window
     app_options.window_width = width();
     app_options.window_height = height();
     if (windowState() == Qt::WindowMinimized)
         app_options.window_state = 0;
-    else if (windowState() == Qt::WindowActive)
+    else if (windowState() == Qt::WindowNoState)
         app_options.window_state = 1;
     else if (windowState() == Qt::WindowMaximized)
         app_options.window_state = 2;
@@ -238,6 +318,28 @@ void MusicPlayer::addSongToPlaylist(const Playlist::Song &temp_song) {
     model->appendRow(item_list);
 }
 
+void MusicPlayer::swap_songs(const int row1, const int row2) {
+    if (playlist.swap(row1, row2)) {
+        QString temp_info;
+        if (current_playing == row1) {
+            current_playing = row2;
+            QIcon icon = model->item(row1)->icon();
+            model->item(row2)->setIcon(icon);
+            model->item(row1)->setIcon(QIcon());
+        } else if (current_playing == row2) {
+            current_playing = row1;
+            QIcon icon = model->item(row2)->icon();
+            model->item(row1)->setIcon(icon);
+            model->item(row2)->setIcon(QIcon());
+        }
+        for (int i = 0; i < 4; ++i) {
+            temp_info = model->item(row1, i)->text();
+            model->item(row1, i)->setText(model->item(row2, i)->text());
+            model->item(row2, i)->setText(temp_info);
+        }
+    }
+}
+
 void MusicPlayer::nextSong() {
     if (current_playing != -1) {
         model->item(current_playing)->setIcon(QIcon());
@@ -248,6 +350,10 @@ void MusicPlayer::nextSong() {
         }
         model->item(current_playing)->setIcon(QIcon(":/assets/playSong.svg"));
         ui->playerWidget->playSongImmediately(model->item(current_playing, 3)->text());
+        if (app_options.change_song_notification && (windowState() == Qt::WindowMinimized || !this->isVisible())) {
+            trayIcon->showMessage(QString("现在播放：%1").arg(model->item(current_playing)->text()), QString("%1 - %2").arg(model->item(current_playing)->text())
+                                                                            .arg(model->item(current_playing, 1)->text()));
+        }
     }
 }
 
@@ -261,7 +367,26 @@ void MusicPlayer::lastSong() {
         }
         model->item(current_playing)->setIcon(QIcon(":/assets/playSong.svg"));
         ui->playerWidget->playSongImmediately(model->item(current_playing, 3)->text());
+        if (app_options.change_song_notification && (windowState() == Qt::WindowMinimized || !this->isVisible())) {
+            trayIcon->showMessage(QString("现在播放：%1").arg(model->item(current_playing)->text()), QString("%1 - %2").arg(model->item(current_playing)->text())
+                    .arg(model->item(current_playing, 1)->text()));
+        }
     }
+}
+
+void MusicPlayer::moveUpSong() {
+    if (table->currentIndex().row() > 0)
+        swap_songs(table->currentIndex().row(), table->currentIndex().row() - 1);
+}
+
+void MusicPlayer::moveDownSong() {
+    if (table->currentIndex().row() < model->rowCount())
+        swap_songs(table->currentIndex().row(), table->currentIndex().row() + 1);
+}
+
+void MusicPlayer::moveTopSong() {
+    if (table->currentIndex().row() > 0)
+        swap_songs(table->currentIndex().row(), 0);
 }
 
 // 仅在删除时才调用
@@ -285,7 +410,7 @@ void MusicPlayer::resizeEvent(QResizeEvent *event) {
 
 void MusicPlayer::closeEvent(QCloseEvent *event) {
     event->ignore();
-    if (is_not_closed) {
+    if (is_not_closed && app_options.close_window_notification) {
         trayIcon->showMessage(QApplication::applicationName(), "请注意：程序仍在运行，不要忘记从托盘图标中打开！", QSystemTrayIcon::Information, 5000);
     } else saveOptions();
     hide();
@@ -335,6 +460,53 @@ void MusicPlayer::openFileAndPlayFile() {
     current_playing = -1;
 }
 
+void MusicPlayer::showOptions() {
+    if (!options_window) {
+        options_window = new Options(this);
+        connect(options_window, &Options::ConfigSaved, [this] (const AppOptions& new_options) {
+             app_options.auto_play_music = new_options.auto_play_music;
+             app_options.auto_change_audio_output = new_options.auto_change_audio_output;
+             app_options.remember_playlist_id = new_options.remember_playlist_id;
+             app_options.auto_pause_song_when_audio_output_changed = new_options.auto_pause_song_when_audio_output_changed;
+             ui->playerWidget->setAutoChangeOutputSwitch(new_options.auto_change_audio_output);
+             ui->playerWidget->setAutoPausedSwitch(new_options.auto_pause_song_when_audio_output_changed);
+
+             app_options.start_up_notification = new_options.start_up_notification;
+             app_options.close_window_notification = new_options.close_window_notification;
+             app_options.change_song_notification = new_options.change_song_notification;
+        });
+        connect(options_window, &Options::audioDeviceSet, [this] (const QString& description) {
+            auto device_list = ui->playerWidget->getAllAudioDevice();
+            for (auto device : device_list) {
+                if (!device.description().compare(description)) {
+                    ui->playerWidget->changeAudioDevice(device);
+                }
+            }
+        });
+        connect(options_window, &Options::themeChanged, [this] (const QString& path) {
+            // Switch Theme Config
+            if (path.isEmpty()) {
+                setStyleSheet("");
+                return;
+            }
+            QFile file(path);
+            if (file.open(QIODevice::ReadOnly)) {
+                setStyleSheet(file.readAll());
+                file.close();
+                app_options.theme_path = path;
+            } else {
+                setStyleSheet("");
+            }
+        });
+    }
+    auto audio_list = ui->playerWidget->getAllAudioDevice();
+    // 获取当前的输出设备
+    options_window->setAudioDeviceList(audio_list);
+    options_window->getCurrentAudioDevice(ui->playerWidget->getCurrentAudioDevice());
+    options_window->setupAppConfig(app_options);
+    options_window->show();
+}
+
 void MusicPlayer::playPause() {
     if (ui->playerWidget->isPlayingSong()) {
         ui->playerWidget->pause();
@@ -344,13 +516,6 @@ void MusicPlayer::playPause() {
 }
 
 void MusicPlayer::getSongInfo(const QString &url) {
-    TagLib::FileRef f(url.toStdString().data());
-//    if (!f.isNull() && f.tag()) {
-//        qDebug() << "[Songs Detail]";
-//        qDebug() << "Title: " << f.tag()->title().toCString(true);
-//        qDebug() << "Artist: " << f.tag()->artist().toCString(true);
-//        qDebug() << "Album: " << f.tag()->album().toCString(true);
-//    }
     status_playing->setText(url.right(url.size()- url.lastIndexOf('/') - 1));
     setWindowTitle(QString("%1 - %2").arg(url.right(url.size()- url.lastIndexOf('/') - 1)).arg(QApplication::applicationName()));
     trayIcon->setToolTip(QString("%1 - %2").arg(url.right(url.size()- url.lastIndexOf('/') - 1)).arg(QApplication::applicationName()));
@@ -476,6 +641,7 @@ void MusicPlayer::showReadMe() {
 
 void MusicPlayer::showVersion() {
     AboutApp aboutApp;
+    aboutApp.setStyleSheet(styleSheet());
     aboutApp.exec();
 }
 

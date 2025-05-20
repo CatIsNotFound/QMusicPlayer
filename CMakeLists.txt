@@ -44,6 +44,9 @@ add_executable(QMusicPlayer main.cpp
         playlist.cpp
         playlist.h
         AppConfig.h
+        Options.cpp
+        Options.h
+        Options.ui
 )
 
 target_link_libraries(QMusicPlayer

@@ -2,3 +2,4 @@ cmake-build-*
 build
 .idea
 .vscode
+CMakeLists.txt.user

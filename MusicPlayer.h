@@ -25,6 +25,7 @@
 #include "AboutApp.h"
 #include "playlist.h"
 #include "AppConfig.h"
+#include "Options.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MusicPlayer; }
@@ -84,10 +85,15 @@ public:
     void updateSelectionCount();
     bool addFileToPlaylist(const QString& url);
     void addSongToPlaylist(const Playlist::Song& song);
+    void swap_songs(const int row1, const int row2);
+
 
 public slots:
     void nextSong();
     void lastSong();
+    void moveUpSong();
+    void moveDownSong();
+    void moveTopSong();
 
 protected:
     void firstSong();
@@ -99,6 +105,7 @@ protected:
 
 protected slots:
     void openFileAndPlayFile();
+    void showOptions();
     void playPause();
     void getSongInfo(const QString& url);
     void playSongFromList();
@@ -113,7 +120,7 @@ protected slots:
 private:
     Ui::MusicPlayer *ui;
     QPointer<QSystemTrayIcon> trayIcon;
-    QPointer<QMenu> trayMenu, listMenu;
+    QPointer<QMenu> trayMenu;
     QPointer<QAction> action_ShowUI, action_Quit;
     QPointer<QStandardItemModel> model;
     QPointer<QTableView> table;
@@ -124,6 +131,8 @@ private:
     QList<ImportSongsTask*> multi_import_task;
     QPointer<AddMultiSongsTask> add_songs_task;
     AppOptions app_options{};
+    QPointer<Options> options_window;
+    QTimer auto_play_timer;
     bool is_not_closed{true};
 };
 

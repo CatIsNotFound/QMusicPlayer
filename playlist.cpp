@@ -108,3 +108,17 @@ bool Playlist::parseSongFromFileName(const QString &path, Song &song) {
     song = temp_song;
     return true;
 }
+
+bool Playlist::swap(const uint i1, const uint i2) {
+    if (i1 > play_list.size() - 1 || i2 > play_list.size() - 1) return false;
+    Song temp_song = {play_list[i1].title, play_list[i1].artist, play_list[i1].album, play_list[i1].path};
+    play_list[i1].title = play_list[i2].title;
+    play_list[i1].artist = play_list[i2].artist;
+    play_list[i1].album = play_list[i2].album;
+    play_list[i1].path = play_list[i2].path;
+    play_list[i2].title = temp_song.title;
+    play_list[i2].artist = temp_song.artist;
+    play_list[i2].album = temp_song.album;
+    play_list[i2].path = temp_song.path;
+    return true;
+}
