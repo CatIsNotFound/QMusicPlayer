@@ -78,3 +78,5 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
         )
     endif()
 endif()
+
+file(COPY ${CMAKE_SOURCE_DIR}/themes DESTINATION ${CMAKE_BINARY_DIR}/)

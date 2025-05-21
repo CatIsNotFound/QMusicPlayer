@@ -8,8 +8,7 @@
 
 A Simple Local Music Player Based on Qt6 Development
 
-![Screenshot.jpg](assets/screenshot.jpg)
-
+<img src="assets/screenshot.jpg" style="width: 60%">
 
 ## 项目说明
 
@@ -39,7 +38,7 @@ A Simple Local Music Player Based on Qt6 Development
 > 
 > 1. 关于 `Taglib` 项目，这里使用的是 MSVC 或 MinGW 环境进行编译，若你使用的并非 Windows 系统，请使用自带包管理器或自行编译安装！
 > 
-> 2. 如果你是使用 Qt Creator， 记得不要忘记注释掉倒数第二行，因为安装的 Qt 目录有所不同，容易出现找不到包的情况！
+> 2. 如果你是使用 Qt Creator， 记得不要忘记注释 Qt 安装目录变量，因为安装的 Qt 目录有所不同，容易出现找不到包的情况！
 >
 
 ## 如何手动编译项目？
@@ -69,7 +68,7 @@ cmake --build .. --config Release
 
 > 关于 Taglib 需要注意：
 > 
-> Windows 环境下需要复制 `tag.dll`（MSVC）或 `libtag.dll`（MinGW）文件到程序同级目录。
+> Windows 环境下需要手动复制 `tag.dll`（MSVC）或 `libtag.dll`（MinGW）文件到程序同级目录。
 > 
 > - MSVC 下位于：`\path\to\QMusicPlayer\3rdParty\taglib-2.0.2-MSVC\bin`
 > - MinGW 下位于：`\path\to\QMusicPlayer\3rdParty\taglib-2.0.2-MinGW\bin`

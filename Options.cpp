@@ -9,13 +9,26 @@ Options::Options(QWidget *parent) :
     ui->setupUi(this);
     setMinimumSize(width(), height());
     setMaximumSize(width(), height());
+    ui->comboBox_themeConfig->addItem("系统配置");
+    QString c_dir = QDir::currentPath();
+    QDir theme_dir = QDir(c_dir + "/themes/");
+    for (auto& file : theme_dir.entryList()) {
+        if (!file.compare('.') || !file.compare("..")) continue;
+        if (file.contains(".qss")) {
+            ui->comboBox_themeConfig->addItem(file.left(file.indexOf('.')), theme_dir.absolutePath() + "/" + file);
+            qDebug() << "Added Theme path:" << theme_dir.absolutePath() + "/" + file;
+        }
+    }
     connect(ui->pushButton_ApplySettings, &QPushButton::clicked, this, &Options::saveAppConfig);
     connect(ui->pushButton_browser, &QPushButton::clicked, [this] {
-        QString file_path = QFileDialog::getOpenFileName(this, "打开主题文件...", QDir::currentPath(), "主题文件(*.qss)");
+        QString file_path = QFileDialog::getOpenFileName(this, "打开主题文件...", QDir::currentPath(), "主题文件(*.qss);;所有文件(*.*)");
         if (!file_path.isEmpty()) {
+            QString real_file_name = QDir(file_path).dirName();
             if (!isExistThemeFile(file_path)) {
-                ui->comboBox_themeConfig->addItem(file_path);
-                ui->comboBox_themeConfig->setCurrentIndex(ui->comboBox_themeConfig->count() - 1);
+                ui->comboBox_themeConfig->addItem(real_file_name.left(real_file_name.indexOf('.')));
+                int idx = ui->comboBox_themeConfig->count() - 1;
+                ui->comboBox_themeConfig->setItemData(idx, file_path);
+                ui->comboBox_themeConfig->setCurrentIndex(idx);
             }
         }
     });
@@ -59,10 +72,17 @@ void Options::setupAppConfig(const AppOptions &app_options) {
     ui->checkBox_notify3->setChecked(app_options.change_song_notification);
 
     if (!isExistThemeFile(app_options.theme_path)) {
-        ui->comboBox_themeConfig->addItem(app_options.theme_path);
+        if (!app_options.theme_path.isEmpty()) {
+            QString real_file_name = QDir(app_options.theme_path).dirName();
+
+            ui->comboBox_themeConfig->addItem(real_file_name.left(real_file_name.indexOf('.')));
+            int idx = ui->comboBox_themeConfig->count() - 1;
+            ui->comboBox_themeConfig->setItemData(idx, app_options.theme_path);
+        }
     } else {
         for (int i = 0; i < ui->comboBox_themeConfig->count(); ++i) {
-            if (ui->comboBox_themeConfig->itemText(i).compare(app_options.theme_path)) {
+            qDebug() << ui->comboBox_themeConfig->itemData(i).toString() << " = " << app_options.theme_path;
+            if (!ui->comboBox_themeConfig->itemData(i).toString().compare(app_options.theme_path)) {
                 ui->comboBox_themeConfig->setCurrentIndex(i);
                 break;
             }
@@ -82,7 +102,8 @@ void Options::saveAppConfig() {
     app_options.change_song_notification = ui->checkBox_notify3->isChecked();
 
     if (ui->comboBox_themeConfig->currentIndex() > 0) {
-        app_options.theme_path = ui->comboBox_themeConfig->currentText();
+        int idx = ui->comboBox_themeConfig->currentIndex();
+        app_options.theme_path = ui->comboBox_themeConfig->itemData(idx).toString();
         emit themeChanged(app_options.theme_path);
     } else {
         emit themeChanged("");
@@ -94,7 +115,7 @@ void Options::saveAppConfig() {
 
 bool Options::isExistThemeFile(const QString& file_path) {
     for (uint i = 0; i < ui->comboBox_themeConfig->count(); ++i) {
-        if (!file_path.compare(ui->comboBox_themeConfig->itemText(i))) {
+        if (!file_path.compare(ui->comboBox_themeConfig->itemData(i).toString())) {
             return true;
         }
     }

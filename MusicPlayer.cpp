@@ -25,6 +25,42 @@ MusicPlayer::MusicPlayer(QWidget *parent) :
     trayIcon->setContextMenu(trayMenu);
     trayIcon->show();
     trayIcon->setToolTip(QApplication::applicationName());
+    options_window = new Options(this);
+    connect(options_window, &Options::ConfigSaved, [this] (const AppOptions& new_options) {
+        app_options.auto_play_music = new_options.auto_play_music;
+        app_options.auto_change_audio_output = new_options.auto_change_audio_output;
+        app_options.remember_playlist_id = new_options.remember_playlist_id;
+        app_options.auto_pause_song_when_audio_output_changed = new_options.auto_pause_song_when_audio_output_changed;
+        ui->playerWidget->setAutoChangeOutputSwitch(new_options.auto_change_audio_output);
+        ui->playerWidget->setAutoPausedSwitch(new_options.auto_pause_song_when_audio_output_changed);
+
+        app_options.start_up_notification = new_options.start_up_notification;
+        app_options.close_window_notification = new_options.close_window_notification;
+        app_options.change_song_notification = new_options.change_song_notification;
+    });
+    connect(options_window, &Options::audioDeviceSet, [this] (const QString& description) {
+        auto device_list = ui->playerWidget->getAllAudioDevice();
+        for (auto device : device_list) {
+            if (!device.description().compare(description)) {
+                ui->playerWidget->changeAudioDevice(device);
+            }
+        }
+    });
+    connect(options_window, &Options::themeChanged, [this] (const QString& path) {
+        // Switch Theme Config
+        if (path.isEmpty()) {
+            setStyleSheet("");
+            return;
+        }
+        QFile file(path);
+        if (file.open(QIODevice::ReadOnly)) {
+            setStyleSheet(file.readAll());
+            file.close();
+            app_options.theme_path = path;
+        } else {
+            setStyleSheet("");
+        }
+    });
     setupList();
     setupConnection();
     setupOthers();
@@ -246,6 +282,13 @@ void MusicPlayer::setupOptions()
         app_options.change_song_notification = true;
         ui->playerWidget->setAutoChangeOutputSwitch(app_options.auto_change_audio_output);
         ui->playerWidget->setAutoPausedSwitch(app_options.auto_pause_song_when_audio_output_changed);
+
+        app_options.theme_path = QDir::currentPath() + "/themes/CoolLight.qss";
+        QFile file(app_options.theme_path);
+        if (file.open(QIODevice::ReadOnly)) {
+            setStyleSheet(file.readAll());
+            file.close();
+        }
     }
 }
 
@@ -461,48 +504,9 @@ void MusicPlayer::openFileAndPlayFile() {
 }
 
 void MusicPlayer::showOptions() {
-    if (!options_window) {
-        options_window = new Options(this);
-        connect(options_window, &Options::ConfigSaved, [this] (const AppOptions& new_options) {
-             app_options.auto_play_music = new_options.auto_play_music;
-             app_options.auto_change_audio_output = new_options.auto_change_audio_output;
-             app_options.remember_playlist_id = new_options.remember_playlist_id;
-             app_options.auto_pause_song_when_audio_output_changed = new_options.auto_pause_song_when_audio_output_changed;
-             ui->playerWidget->setAutoChangeOutputSwitch(new_options.auto_change_audio_output);
-             ui->playerWidget->setAutoPausedSwitch(new_options.auto_pause_song_when_audio_output_changed);
-
-             app_options.start_up_notification = new_options.start_up_notification;
-             app_options.close_window_notification = new_options.close_window_notification;
-             app_options.change_song_notification = new_options.change_song_notification;
-        });
-        connect(options_window, &Options::audioDeviceSet, [this] (const QString& description) {
-            auto device_list = ui->playerWidget->getAllAudioDevice();
-            for (auto device : device_list) {
-                if (!device.description().compare(description)) {
-                    ui->playerWidget->changeAudioDevice(device);
-                }
-            }
-        });
-        connect(options_window, &Options::themeChanged, [this] (const QString& path) {
-            // Switch Theme Config
-            if (path.isEmpty()) {
-                setStyleSheet("");
-                return;
-            }
-            QFile file(path);
-            if (file.open(QIODevice::ReadOnly)) {
-                setStyleSheet(file.readAll());
-                file.close();
-                app_options.theme_path = path;
-            } else {
-                setStyleSheet("");
-            }
-        });
-    }
     auto audio_list = ui->playerWidget->getAllAudioDevice();
     // 获取当前的输出设备
     options_window->setAudioDeviceList(audio_list);
-//    options_window->getCurrentAudioDevice(ui->playerWidget->getCurrentAudioDevice());
     options_window->setupAppConfig(app_options);
     options_window->show();
 }

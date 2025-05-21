@@ -1,10 +1,13 @@
 <RCC>
   <qresource prefix="/">
+    <file>assets/checked.svg</file>
+    <file>assets/unchecked.svg</file>
     <file>assets/24gf-fileText.svg</file>
     <file>assets/app.svg</file>
     <file>assets/appicon.ico</file>
     <file>assets/backward.svg</file>
     <file>assets/Default.jpg</file>
+    <file>assets/drop_down.svg</file>
     <file>assets/forward.svg</file>
     <file>assets/github _github.svg</file>
     <file>assets/lastSong.svg</file>

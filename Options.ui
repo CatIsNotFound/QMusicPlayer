@@ -187,11 +187,6 @@
         <height>22</height>
        </rect>
       </property>
-      <item>
-       <property name="text">
-        <string>系统默认</string>
-       </property>
-      </item>
      </widget>
      <widget class="QPushButton" name="pushButton_browser">
       <property name="geometry">

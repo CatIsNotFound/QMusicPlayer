@@ -7,6 +7,7 @@
 Player::Player(QWidget *parent) :
         QWidget(parent), ui(new Ui::Player) {
     ui->setupUi(this);
+
     mediaPlayer = new QMediaPlayer();
     audioOutput = new QAudioOutput;
     audioOutput->setDevice(QMediaDevices::defaultAudioOutput());
@@ -308,27 +309,12 @@ void Player::metaDataChanged() {
                 QString("%1")
                         .arg(metadata.value(QMediaMetaData::Title).toString())
                         );
-        return;
-    }
-    ui->label_playSong->setText(
-            QString("%1 - %2")
-                    .arg(metadata.stringValue(QMediaMetaData::Title))
-                    .arg(metadata.stringValue(QMediaMetaData::Author))
-    );
-    auto temp_data = metadata.value(QMediaMetaData::CoverArtImage);
-    if (temp_data.canConvert<QImage>()) {
-        QImage cover_image = temp_data.value<QImage>();
-        if (!cover_image.isNull()) {
-            QPixmap m_image = QPixmap::fromImage(cover_image)
-                        .scaled(ui->label_playImage->width(), ui->label_playImage->height(),
-                                Qt::KeepAspectRatio, Qt::SmoothTransformation);
-            ui->label_playImage->setPixmap(m_image);
-        } else {
-            QPixmap m_image = QPixmap::fromImage(QImage(":/assets/Default.jpg"))
-                    .scaled(ui->label_playImage->width(), ui->label_playImage->height(),
-                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
-            ui->label_playImage->setPixmap(m_image);
-        }
+    } else {
+        ui->label_playSong->setText(
+                QString("%1 - %2")
+                        .arg(metadata.stringValue(QMediaMetaData::Title))
+                        .arg(metadata.stringValue(QMediaMetaData::Author))
+        );
     }
 }
 
