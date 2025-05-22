@@ -283,7 +283,7 @@ void MusicPlayer::setupOptions()
         ui->playerWidget->setAutoChangeOutputSwitch(app_options.auto_change_audio_output);
         ui->playerWidget->setAutoPausedSwitch(app_options.auto_pause_song_when_audio_output_changed);
 
-        app_options.theme_path = QDir::currentPath() + "/themes/CoolLight.qss";
+        app_options.theme_path = ":/themes/CoolLight.qss";
         QFile file(app_options.theme_path);
         if (file.open(QIODevice::ReadOnly)) {
             setStyleSheet(file.readAll());

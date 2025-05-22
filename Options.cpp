@@ -11,14 +11,16 @@ Options::Options(QWidget *parent) :
     setMaximumSize(width(), height());
     ui->comboBox_themeConfig->addItem("系统配置");
     QString c_dir = QDir::currentPath();
-    QDir theme_dir = QDir(c_dir + "/themes/");
-    for (auto& file : theme_dir.entryList()) {
-        if (!file.compare('.') || !file.compare("..")) continue;
-        if (file.contains(".qss")) {
-            ui->comboBox_themeConfig->addItem(file.left(file.indexOf('.')), theme_dir.absolutePath() + "/" + file);
-            qDebug() << "Added Theme path:" << theme_dir.absolutePath() + "/" + file;
-        }
-    }
+//    QDir theme_dir = QDir(c_dir + "/themes/");
+//    for (auto& file : theme_dir.entryList()) {
+//        if (!file.compare('.') || !file.compare("..")) continue;
+//        if (file.contains(".qss")) {
+//            ui->comboBox_themeConfig->addItem(file.left(file.indexOf('.')), theme_dir.absolutePath() + "/" + file);
+//            qDebug() << "Added Theme path:" << theme_dir.absolutePath() + "/" + file;
+//        }
+//    }
+    ui->comboBox_themeConfig->addItem("CoolLight", ":/themes/CoolLight.qss");
+    ui->comboBox_themeConfig->addItem("CoolDark", ":/themes/CoolDark.qss");
     connect(ui->pushButton_ApplySettings, &QPushButton::clicked, this, &Options::saveAppConfig);
     connect(ui->pushButton_browser, &QPushButton::clicked, [this] {
         QString file_path = QFileDialog::getOpenFileName(this, "打开主题文件...", QDir::currentPath(), "主题文件(*.qss);;所有文件(*.*)");
