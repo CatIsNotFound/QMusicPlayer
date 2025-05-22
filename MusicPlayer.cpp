@@ -497,7 +497,7 @@ void MusicPlayer::dropEvent(QDropEvent *event)
 void MusicPlayer::openFileAndPlayFile() {
     QString fileName = QFileDialog::getOpenFileName(this, "打开...", QDir::homePath(), "MP3文件(*.mp3);;FLAC文件(*.flac);;OGG文件(*.ogg);;音频文件(*.wav);;所有文件(*.*)");
     if (fileName.isEmpty()) return;
-    qDebug() << "Open:" << fileName;
+    // qDebug() << "Open:" << fileName;
     ui->playerWidget->playSongImmediately(fileName);
     if (current_playing != -1) model->item(current_playing)->setIcon(QIcon());
     current_playing = -1;
@@ -576,7 +576,7 @@ void MusicPlayer::importSongDirectoryToList() {
 
 void MusicPlayer::removeSongFromList() {
     int row = table->currentIndex().row();
-    qDebug() << "Removed row: " << row;
+//    qDebug() << "Removed row: " << row;
     if (row < 0) return;
     // 获取当前播放的路径
     QString c_playing;
@@ -650,20 +650,20 @@ void MusicPlayer::showVersion() {
 }
 
 void ImportSongsTask::run() {
-    qDebug() << "Import Task is started!";
+//    qDebug() << "Import Task is started!";
     QDir dir(directory_name);
     int success_count = 0;
     auto songs_list = dir.entryList(QDir::Files);
     for (auto& song : songs_list) {
         QString path = directory_name + "/" + song;
-        qDebug() << "Import:" << song;
+//        qDebug() << "Import:" << song;
         Playlist::Song temp_song;
         if (imported_play_list.parseSongFromFileName(path, temp_song)) {
             success_count++;
             emit addSong(temp_song);
         }
     }
-    qDebug() << "Import finished!\n- Successful:" << success_count;
+//    qDebug() << "Import finished!\n- Successful:" << success_count;
     emit finishedWork(success_count);
 }
 
@@ -697,14 +697,14 @@ void AddMultiSongsTask::clearTaskList() {
 void AddMultiSongsTask::run() {
     uint success_count = 0;
     for (auto& song : path_list) {
-        qDebug() << "Import:" << song;
+//        qDebug() << "Import:" << song;
         Playlist::Song temp_song;
         if (added_playlist.parseSongFromFileName(song, temp_song)) {
             success_count++;
             emit addSongToList(temp_song);
         }
     }
-    qDebug() << "Import finished!\n- Successful:" << success_count;
+//    qDebug() << "Import finished!\n- Successful:" << success_count;
 
     emit finishedWork();
 }

@@ -11,14 +11,6 @@ Options::Options(QWidget *parent) :
     setMaximumSize(width(), height());
     ui->comboBox_themeConfig->addItem("系统配置");
     QString c_dir = QDir::currentPath();
-//    QDir theme_dir = QDir(c_dir + "/themes/");
-//    for (auto& file : theme_dir.entryList()) {
-//        if (!file.compare('.') || !file.compare("..")) continue;
-//        if (file.contains(".qss")) {
-//            ui->comboBox_themeConfig->addItem(file.left(file.indexOf('.')), theme_dir.absolutePath() + "/" + file);
-//            qDebug() << "Added Theme path:" << theme_dir.absolutePath() + "/" + file;
-//        }
-//    }
     ui->comboBox_themeConfig->addItem("CoolLight", ":/themes/CoolLight.qss");
     ui->comboBox_themeConfig->addItem("CoolDark", ":/themes/CoolDark.qss");
     connect(ui->pushButton_ApplySettings, &QPushButton::clicked, this, &Options::saveAppConfig);
@@ -83,7 +75,7 @@ void Options::setupAppConfig(const AppOptions &app_options) {
         }
     } else {
         for (int i = 0; i < ui->comboBox_themeConfig->count(); ++i) {
-            qDebug() << ui->comboBox_themeConfig->itemData(i).toString() << " = " << app_options.theme_path;
+            // qDebug() << ui->comboBox_themeConfig->itemData(i).toString() << " = " << app_options.theme_path;
             if (!ui->comboBox_themeConfig->itemData(i).toString().compare(app_options.theme_path)) {
                 ui->comboBox_themeConfig->setCurrentIndex(i);
                 break;
